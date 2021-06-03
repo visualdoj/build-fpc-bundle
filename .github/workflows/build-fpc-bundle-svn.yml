@@ -35,7 +35,9 @@ jobs:
 
       - name: Install Free Pascal Compiler (choco)
         if: (runner.os == 'Windows') && (github.event.inputs.fpc == '')
-        run: choco install freepascal
+        run: |
+          choco install freepascal
+          refreshenv
 
       - name: Install Free Pascal Compiler (brew)
         if: (runner.os == 'macOS') && (github.event.inputs.fpc == '')
