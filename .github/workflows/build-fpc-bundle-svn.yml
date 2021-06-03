@@ -1,0 +1,73 @@
+name: Build FPC bundle from SVN
+on:
+  workflow_dispatch:
+    inputs:
+      os:
+        description: 'GitHub environment (e.g. ubuntu-latest, windows-latest, macos-latest)'
+        required: true
+      fpc:
+        description: 'Which free pascal use for compilation, leave empty for packet manager'
+        required: true
+        default: ''
+      fpc_opt:
+        description: 'Additional options for build process'
+        required: false
+        default: ''
+      branch:
+        description: 'Branch (trunk or branches/xxx)'
+        required: false
+        default: 'trunk'
+      revision:
+        description: 'SVN revision'
+        required: false
+        default: 'HEAD'
+      svn_url:
+        description: 'SVN url to fpc sources'
+        required: false
+        default: 'https://svn.freepascal.org/svn/fpc'
+jobs:
+  Build-Bundle:
+    runs-on: ${{ github.event.inputs.os }}
+    steps:
+      - name: Install Free Pascal Compiler (apt-get)
+        if: (runner.os == 'Linux') and (github.event.inputs.fpc == '')
+        run: sudo apt-get install fpc
+
+      - name: Install Free Pascal Compiler (choco)
+        if: (runner.os == 'Windows') and (github.event.inputs.fpc == '')
+        run: choco install freepascal
+
+      - name: Install Free Pascal Compiler (brew)
+        if: (runner.os == 'macOS') and (github.event.inputs.fpc == '')
+        run: |
+          brew update
+          brew install --cask fpc
+
+      - name: Install Free Pascal Compiler (GitHub Action)
+        if: github.event.inputs.fpc != ''
+        uses: visualdoj/setup-fpc@v0.1.11-beta
+
+      - name: Print fpc version
+        run: fpc -i
+
+      - name: Getting Free Pascal Sources
+        working-directory: "${{ github.workspace }}"
+        run: svn checkout -r"${{ github.event.inputs.revision }}" "${{ github.event.inputs.svn_url }}/${{ github.event.inputs.branch }}" src
+
+      - name: Build FPC
+        working-directory: "${{ github.workspace }}/src"
+        run: make build OPT="${{ github.event.inputs.fpc_opt }}"
+
+      - name: Install FPC
+        working-directory: "${{ github.workspace }}/src"
+        run: make install PREFIX="${{ github.workspace }}/bundle"
+
+      - name: Zip
+        working-directory: "${{ github.workspace }}/bundle"
+        run: zip ../bundle.zip -r *
+
+      - name: Upload the bundle
+        uses: actions/upload-artifact@v2
+        with:
+          name: bundle.zip
+          path: "${{ github.workspace }}/bundle.zip"
