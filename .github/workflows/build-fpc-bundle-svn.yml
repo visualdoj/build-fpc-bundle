@@ -41,7 +41,7 @@ jobs:
         if: (runner.os == 'macOS') && (github.event.inputs.fpc == '')
         run: |
           brew update
-          brew install --cask fpc
+          brew install fpc
 
       - name: Install Free Pascal Compiler (GitHub Action)
         if: github.event.inputs.fpc != ''
