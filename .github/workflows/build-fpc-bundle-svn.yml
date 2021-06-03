@@ -7,7 +7,7 @@ on:
         required: true
       fpc:
         description: 'Which free pascal use for compilation, leave empty for packet manager'
-        required: true
+        required: false
         default: ''
       fpc_opt:
         description: 'Additional options for build process'
