@@ -62,12 +62,8 @@ jobs:
         working-directory: "${{ github.workspace }}/src"
         run: make install PREFIX="${{ github.workspace }}/bundle"
 
-      - name: Zip
-        working-directory: "${{ github.workspace }}/bundle"
-        run: zip ../bundle.zip -r *
-
       - name: Upload the bundle
         uses: actions/upload-artifact@v2
         with:
-          name: bundle.zip
-          path: "${{ github.workspace }}/bundle.zip"
+          name: bundle
+          path: "${{ github.workspace }}/bundle"
