@@ -43,8 +43,8 @@ jobs:
         if: (runner.os == 'Windows') && (github.event.inputs.fpc == '')
         run: |
           ls "C:\\tools\\freepascal\\"
-          ls "C:\\tools\\freepascal\\3.0.4\\bin\\"
-          echo "C:\\tools\\freepascal\\3.0.4\\bin\\i386-win32\\" >>$GITHUB_PATH
+          ls "C:\\tools\\freepascal\\bin\\"
+          echo "C:\\tools\\freepascal\\bin\\i386-win32\\" >>$GITHUB_PATH
 
       - name: Install Free Pascal Compiler (brew)
         if: (runner.os == 'macOS') && (github.event.inputs.fpc == '')
