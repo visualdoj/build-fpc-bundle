@@ -30,15 +30,15 @@ jobs:
     runs-on: ${{ github.event.inputs.os }}
     steps:
       - name: Install Free Pascal Compiler (apt-get)
-        if: (runner.os == 'Linux') and (github.event.inputs.fpc == '')
+        if: (runner.os == 'Linux') && (github.event.inputs.fpc == '')
         run: sudo apt-get install fpc
 
       - name: Install Free Pascal Compiler (choco)
-        if: (runner.os == 'Windows') and (github.event.inputs.fpc == '')
+        if: (runner.os == 'Windows') && (github.event.inputs.fpc == '')
         run: choco install freepascal
 
       - name: Install Free Pascal Compiler (brew)
-        if: (runner.os == 'macOS') and (github.event.inputs.fpc == '')
+        if: (runner.os == 'macOS') && (github.event.inputs.fpc == '')
         run: |
           brew update
           brew install --cask fpc
