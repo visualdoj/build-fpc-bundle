@@ -27,6 +27,7 @@ on:
         default: 'https://svn.freepascal.org/svn/fpc'
 jobs:
   Build-Bundle:
+    name: "Build fpc for ${{ github.event.inputs.os }} from ${{ github.event.inputs.svn_url }}/${{ github.event.inputs.branch }}"
     runs-on: ${{ github.event.inputs.os }}
     steps:
       - name: Install Free Pascal Compiler (apt-get)
