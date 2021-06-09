@@ -2,6 +2,7 @@ name: Auto Build All Bundles
 on: [push]
 jobs:
   Run-Building-Bundle:
+    runs-on: ubuntu-latest
     steps:
       - name: "Build 3.2.1 for Linux x64"
         uses: benc-uk/workflow-dispatch@v1
