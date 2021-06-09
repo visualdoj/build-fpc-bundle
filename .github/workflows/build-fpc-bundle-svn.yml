@@ -59,8 +59,8 @@ jobs:
           brew install fpc
 
       - name: Install Free Pascal Compiler (GitHub Action)
-        if: github.event.inputs.fpc != ''
-        uses: "${{ github.event.inputs.fpc }}"
+        if: github.event.inputs.fpc == 'setup-fpc'
+        uses: visualdoj/setup-fpc@v0.1.11-beta
 
       - name: Print fpc version
         run: fpc -i
