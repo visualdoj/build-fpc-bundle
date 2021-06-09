@@ -60,7 +60,7 @@ jobs:
 
       - name: Install Free Pascal Compiler (GitHub Action)
         if: github.event.inputs.fpc != ''
-        uses: ${{ github.event.inputs.fpc }}
+        uses: "${{ github.event.inputs.fpc }}"
 
       - name: Print fpc version
         run: fpc -i
