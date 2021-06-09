@@ -1,0 +1,17 @@
+name: Auto Build All Bundles
+on: [push]
+jobs:
+  Run-Building-Bundle:
+    steps:
+      - name: "Build 3.2.1 for Linux x64"
+        token: ${{ secrets.PERSONAL_TOKEN }}
+        uses: benc-uk/workflow-dispatch@v1
+        inputs: '{ "os": "ubuntu-latest", "branch": "branches/fixes_3_2", "bundle_name": "fpc-3.2.3.x64-linux"}'
+      - name: "Build 3.2.1 for Windows x64"
+        token: ${{ secrets.PERSONAL_TOKEN }}
+        uses: benc-uk/workflow-dispatch@v1
+        inputs: '{ "os": "windows-latest", "branch": "branches/fixes_3_2", "bundle_name": "fpc-3.2.3.x64-windows"}'
+      - name: "Build 3.2.1 for macOS x64"
+        token: ${{ secrets.PERSONAL_TOKEN }}
+        uses: benc-uk/workflow-dispatch@v1
+        inputs: '{ "os": "macos-latest", "branch": "branches/fixes_3_2", "bundle_name": "fpc-3.2.3.x64-macos"}'
