@@ -118,11 +118,13 @@ jobs:
 
       - name: Untar the bundle
         working-directory: "${{ github.workspace }}"
-        run: tar xvf bundle.tar
+        run: |
+            tar xvf bundle.tar
+            mv bundle fpc
 
       - name: Setup PATH (Windows)
         if: runner.os == 'Windows'
-        run: echo ${{ github.workspace }}\bundle\installed\bin\i386-win32 | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        run: echo ${{ github.workspace }}\fpc\installed\bin\i386-win32 | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Print FPC version
         run: fpc -i
@@ -131,7 +133,7 @@ jobs:
         working-directory: "${{ github.workspace }}"
         run: |
             mkdir bundle-cross
-            cp -r bundle/* bundle-cross/
+            cp -r fpc/* bundle-cross/
 
       - name: Install Android NDK (choco)
         if: runner.os == 'Windows'
@@ -141,21 +143,31 @@ jobs:
 
       - name: Build FPC cross compiler (windows to win64)
         if: runner.os == 'Windows'
-        working-directory: "${{ github.workspace }}/src"
+        working-directory: "${{ github.workspace }}/fpc/src"
         run: |
-            make clean all OS_TARGET=win64 CPU_TARGET=x86_64 OPT="${{ github.event.inputs.fpc_opt }}" PREFIX="${{ github.workspace }}/bundle/installed"
-            make crossinstall OS_TARGET=win64 CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle/installed"
+            make clean all OS_TARGET=win64 CPU_TARGET=x86_64 OPT="${{ github.event.inputs.fpc_opt }}" PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            make crossinstall OS_TARGET=win64 CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed"
 
       - name: Build FPC cross compiler (windows to x86_64-linux)
         if: runner.os == 'Windows'
-        working-directory: "${{ github.workspace }}/src"
+        working-directory: "${{ github.workspace }}/fpc/src"
         run: |
-            make clean all OS_TARGET=linux CPU_TARGET=x86_64 OPT="${{ github.event.inputs.fpc_opt }}" PREFIX="${{ github.workspace }}/bundle/installed"
-            make crossinstall OS_TARGET=linux CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle/installed"
+            make clean all OS_TARGET=linux CPU_TARGET=x86_64 OPT="${{ github.event.inputs.fpc_opt }}" PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            make crossinstall OS_TARGET=linux CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed"
 
       - name: Build FPC cross compiler (windows to android)
         if: runner.os == 'Windows'
-        working-directory: "${{ github.workspace }}/src"
+        working-directory: "${{ github.workspace }}/fpc/src"
         run: |
             set PATH=%PATH%;${{ github.workspace }}/src
-            make clean crossall crossinstall OS_TARGET=android CPU_TARGET=arm CROSSOPT="-Cparmv7a -Cfvfpv3" INSTALL_PREFIX="${{ github.workspace }}/bundle/installed"
+            make clean crossall crossinstall OS_TARGET=android CPU_TARGET=arm CROSSOPT="-Cparmv7a -Cfvfpv3" INSTALL_PREFIX="${{ github.workspace }}/bundle-cross/installed"
+
+      - name: Tar the cross bundle
+        working-directory: "${{ github.workspace }}"
+        run: tar -cvf bundle-cross.tar bundle-cross/*
+
+      - name: Upload the cross bundle
+        uses: actions/upload-artifact@v3
+        with:
+          name: "${{ github.event.inputs.bundle_name }}-cross"
+          path: "${{ github.workspace }}/bundle-cross.tar"
