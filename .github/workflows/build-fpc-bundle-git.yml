@@ -112,6 +112,12 @@ jobs:
             name: "${{ github.event.inputs.bundle_name }}"
             path: "${{ github.workspace }}"
 
+      - name: Install GNU Make (choco)
+        if: runner.os == 'Windows'
+        run: |
+          choco install make
+          make --version
+
       - name: List files
         working-directory: "${{ github.workspace }}"
         run: ls -R
