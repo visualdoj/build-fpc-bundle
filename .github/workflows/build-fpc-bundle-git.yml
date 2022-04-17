@@ -122,7 +122,12 @@ jobs:
             tar xvf bundle.tar
             mv bundle fpc
 
-      - name: Setup PATH (Windows)
+      - name: Get binutils
+        if: runner.os == 'Windows'
+        working-directory: "${{ github.workspace }}"
+        run: git clone "https://gitlab.com/freepascal.org/fpc/binaries.git" fpc-binaries
+
+      - name: Setup FPC PATH (Windows)
         if: runner.os == 'Windows'
         run: echo ${{ github.workspace }}\fpc\installed\bin\i386-win32 | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
@@ -134,6 +139,15 @@ jobs:
         run: |
             mkdir bundle-cross
             cp -r fpc/* bundle-cross/
+
+      - name: Copy binutils (Windows)
+        if: runner.os == 'Windows'
+        working-directory: "${{ github.workspace }}/fpc-binaries/i386-win32"
+        run: git checkout-index --prefix="${{ github.workspace }}/bundle-cross/installed/bin/i386-win32/" -a
+
+      - name: Setup binutils PATH (Windows)
+        if: runner.os == 'Windows'
+        run: echo ${{ github.workspace }}\fpc-binaries\i386-win32 | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Install Android NDK (choco)
         if: runner.os == 'Windows'
