@@ -28,7 +28,7 @@ on:
         default: 'bundle'
 jobs:
   Build-Bundle:
-    name: "Build fpc for ${{ github.event.inputs.os }} from ${{ github.event.inputs.svn_url }}/${{ github.event.inputs.branch }}"
+    name: "Build FPC for ${{ github.event.inputs.os }} from ${{ github.event.inputs.git_url }}"
     runs-on: ${{ github.event.inputs.os }}
     steps:
       - name: Install Free Pascal Compiler (apt-get)
@@ -64,7 +64,7 @@ jobs:
 
       - name: Get FPC sources
         working-directory: "${{ github.workspace }}"
-        run: git clone --branch "${{ github.event.inputs.branch }}" "${{ github.event.inputs.git_url }}" src
+        run: git clone --branch "${{ github.event.inputs.git_branch }}" "${{ github.event.inputs.git_url }}" src
 
       - name: Copy FPC source before it will have been polluted
         working-directory: "${{ github.workspace }}/src"
