@@ -112,10 +112,10 @@ jobs:
             name: "${{ github.event.inputs.bundle_name }}"
             path: "${{ github.workspace }}"
 
-      - name: Install GNU Make (choco)
+      - name: Install GNU Core Utils (choco)
         if: runner.os == 'Windows'
         run: |
-          choco install make
+          choco install gnuwin32-coreutils.install
           make --version
 
       - name: List files
