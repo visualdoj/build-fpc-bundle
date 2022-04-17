@@ -13,18 +13,18 @@ jobs:
         with:
           workflow: Build FPC bundle from GIT
           token: ${{ secrets.BUILD_TOKEN }}
-          inputs: '{ "os": "ubuntu-latest", branch: "fixes_3_2", "bundle_name": "fpc-fixes_3_2.x64-linux" }'
+          inputs: '{ "os": "ubuntu-latest", "branch": "fixes_3_2", "bundle_name": "fpc-fixes_3_2.x64-linux" }'
       - name: "Build stable FPC for Windows x64"
         if: ${{ always() }}
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: Build FPC bundle from GIT
           token: ${{ secrets.BUILD_TOKEN }}
-          inputs: '{ "os": "windows-latest", branch: "fixes_3_2", "bundle_name": "fpc-fixes_3_2.x64-windows" }'
+          inputs: '{ "os": "windows-latest", "branch": "fixes_3_2", "bundle_name": "fpc-fixes_3_2.x64-windows" }'
       - name: "Build stable FPC for macOS x64"
         if: ${{ always() }}
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: Build FPC bundle from GIT
           token: ${{ secrets.BUILD_TOKEN }}
-          inputs: '{ "os": "macos-latest", branch: "fixes_3_2", "bundle_name": "fpc-fixes_3_2.x64-macos" }'
+          inputs: '{ "os": "macos-latest", "branch": "fixes_3_2", "bundle_name": "fpc-fixes_3_2.x64-macos" }'
