@@ -68,7 +68,7 @@ jobs:
 
       - name: Copy FPC source before it will have been polluted
         working-directory: "${{ github.workspace }}/src"
-        run: git checkout-index --prefix="${{ github.workspace }}/bundle/src" -a
+        run: git checkout-index --prefix="${{ github.workspace }}/bundle/src/" -a
 
       - name: Build FPC
         working-directory: "${{ github.workspace }}/src"
@@ -78,12 +78,18 @@ jobs:
         working-directory: "${{ github.workspace }}/src"
         run: make install PREFIX="${{ github.workspace }}/bundle/installed"
 
+      - name: Generate info
+        working-directory: "${{ github.workspace }}/bundle"
+        run: |
+            mkdir info
+            fpc -i >info/fpc-version.txt
+
       - name: Tar the bundle
         working-directory: "${{ github.workspace }}"
         run: tar -cvf "${{ github.event.inputs.bundle_name }}.tar" bundle
 
       - name: Upload the bundle
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: "${{ github.event.inputs.bundle_name }}"
           path: "${{ github.workspace }}/${{ github.event.inputs.bundle_name }}.tar"
