@@ -170,6 +170,13 @@ jobs:
           choco install android-ndk --params="'/InstallationPath:${{ github.workspace }}\Android\'"
           refreshenv
 
+      - name: Build FPC cross compiler (windows to android)
+        if: runner.os == 'Windows'
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            set PATH=%PATH%;${{ github.workspace }}/src
+            make clean crossall crossinstall OS_TARGET=android CPU_TARGET=arm CROSSOPT="-Cparmv7a -Cfvfpv3" INSTALL_PREFIX="${{ github.workspace }}/bundle-cross/installed"
+
       - name: Build FPC cross compiler (windows to win64)
         if: runner.os == 'Windows'
         working-directory: "${{ github.workspace }}/fpc/src"
@@ -183,13 +190,6 @@ jobs:
         run: |
             make clean all OS_TARGET=linux CPU_TARGET=x86_64 OPT="${{ github.event.inputs.fpc_opt }}" PREFIX="${{ github.workspace }}/bundle-cross/installed"
             make crossinstall OS_TARGET=linux CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed"
-
-      - name: Build FPC cross compiler (windows to android)
-        if: runner.os == 'Windows'
-        working-directory: "${{ github.workspace }}/fpc/src"
-        run: |
-            set PATH=%PATH%;${{ github.workspace }}/src
-            make clean crossall crossinstall OS_TARGET=android CPU_TARGET=arm CROSSOPT="-Cparmv7a -Cfvfpv3" INSTALL_PREFIX="${{ github.workspace }}/bundle-cross/installed"
 
       - name: Tar the cross bundle
         working-directory: "${{ github.workspace }}"
