@@ -101,4 +101,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: "${{ github.event.inputs.bundle_name }}"
-          path: "${{ github.workspace }}/${{ github.event.inputs.bundle_name }}.tar"
+          path: "${{ github.workspace }}/bundle.tar"
