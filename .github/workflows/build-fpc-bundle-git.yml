@@ -74,6 +74,15 @@ jobs:
         working-directory: "${{ github.workspace }}/src"
         run: git checkout-index --prefix="${{ github.workspace }}/bundle/src/" -a
 
+      - name: Copy binutils (Windows)
+        if: runner.os == 'Windows'
+        working-directory: "${{ github.workspace }}/bundle"
+        run: |
+          mkdir installed
+          mkdir installed\bin
+          mkdir installed\bin\i386-win32
+          cp C:\tools\freepascal\bin\i386-win32\* installed\bin\i386-win32\
+
       - name: Build FPC
         working-directory: "${{ github.workspace }}/src"
         run: make build OPT="${{ github.event.inputs.fpc_opt }}"
