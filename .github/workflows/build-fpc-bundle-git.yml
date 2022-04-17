@@ -29,7 +29,7 @@ on:
       cross_compilers:
         description: 'Build cross compilers'
         required: false
-        default: ''
+        default: 'true'
 jobs:
   Build-Bundle:
     name: "Build FPC for ${{ github.event.inputs.os }} from ${{ github.event.inputs.git_url }}"
