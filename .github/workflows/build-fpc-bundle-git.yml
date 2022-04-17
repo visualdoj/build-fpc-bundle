@@ -1,6 +1,4 @@
-name: Build FPC bundle from SVN
-
-# DEPRECATED: Free Pascal developers no longer uses SVN
+name: Build FPC bundle from GIT
 
 on:
   workflow_dispatch:
@@ -9,25 +7,21 @@ on:
         description: 'GitHub environment (e.g. ubuntu-latest, windows-latest, macos-latest)'
         required: true
       fpc:
-        description: 'Which free pascal use for compilation, leave empty for packet manager'
+        description: 'Compiler version ("system" is for installing from packet manager)'
         required: false
-        default: ''
+        default: 'system'
       fpc_opt:
         description: 'Additional options for build process'
         required: false
         default: ''
-      branch:
-        description: 'Branch (trunk or branches/xxx)'
+      git_url:
+        description: 'GIT url of sources'
         required: false
-        default: 'trunk'
-      revision:
-        description: 'SVN revision'
+        default: 'https://gitlab.com/freepascal.org/fpc/source.git'
+      git_branch:
+        description: 'Branch'
         required: false
-        default: 'HEAD'
-      svn_url:
-        description: 'SVN url to fpc sources'
-        required: false
-        default: 'https://svn.freepascal.org/svn/fpc'
+        default: 'main'
       bundle_name:
         description: 'Bundle name, leave empty for auto generated'
         required: false
@@ -38,17 +32,17 @@ jobs:
     runs-on: ${{ github.event.inputs.os }}
     steps:
       - name: Install Free Pascal Compiler (apt-get)
-        if: (runner.os == 'Linux') && (github.event.inputs.fpc == '')
+        if: (runner.os == 'Linux') && (github.event.inputs.fpc == 'system')
         run: sudo apt-get install fpc
 
       - name: Install Free Pascal Compiler (choco)
-        if: (runner.os == 'Windows') && (github.event.inputs.fpc == '')
+        if: (runner.os == 'Windows') && (github.event.inputs.fpc == 'system')
         run: |
           choco install freepascal
           refreshenv
 
       - name: Workaround for missed PATH settings (choco)
-        if: (runner.os == 'Windows') && (github.event.inputs.fpc == '')
+        if: (runner.os == 'Windows') && (github.event.inputs.fpc == 'system')
         run: |
           ls "C:\\tools\\freepascal"
           ls "C:\\tools\\freepascal\\bin"
@@ -56,7 +50,7 @@ jobs:
           echo "C:\\tools\\freepascal\\bin\\i386-win32" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Install Free Pascal Compiler (brew)
-        if: (runner.os == 'macOS') && (github.event.inputs.fpc == '')
+        if: (runner.os == 'macOS') && (github.event.inputs.fpc == 'system')
         run: |
           brew update
           brew install fpc
@@ -65,12 +59,16 @@ jobs:
         if: github.event.inputs.fpc == 'setup-fpc'
         uses: visualdoj/setup-fpc@v0.1.11-beta
 
-      - name: Print fpc version
+      - name: Print FPC version
         run: fpc -i
 
-      - name: Getting Free Pascal Sources
+      - name: Get FPC sources
         working-directory: "${{ github.workspace }}"
-        run: svn checkout -r"${{ github.event.inputs.revision }}" "${{ github.event.inputs.svn_url }}/${{ github.event.inputs.branch }}" src
+        run: git clone --branch "${{ github.event.inputs.branch }}" "${{ github.event.inputs.git_url }}" src
+
+      - name: Copy FPC source before it will have been polluted
+        working-directory: "${{ github.workspace }}/src"
+        run: git checkout-index --prefix="${{ github.workspace }}/bundle/src" -a
 
       - name: Build FPC
         working-directory: "${{ github.workspace }}/src"
@@ -78,7 +76,7 @@ jobs:
 
       - name: Install FPC
         working-directory: "${{ github.workspace }}/src"
-        run: make install PREFIX="${{ github.workspace }}/bundle"
+        run: make install PREFIX="${{ github.workspace }}/bundle/installed"
 
       - name: Upload the bundle
         uses: actions/upload-artifact@v2
