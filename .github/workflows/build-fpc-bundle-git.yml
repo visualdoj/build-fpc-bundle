@@ -26,6 +26,10 @@ on:
         description: 'Bundle name'
         required: false
         default: 'bundle'
+      cross_compilers:
+        description: 'Build cross compilers'
+        required: false
+        default: ''
 jobs:
   Build-Bundle:
     name: "Build FPC for ${{ github.event.inputs.os }} from ${{ github.event.inputs.git_url }}"
@@ -74,6 +78,11 @@ jobs:
         working-directory: "${{ github.workspace }}/src"
         run: make build OPT="${{ github.event.inputs.fpc_opt }}"
 
+      - name: Build FPC Cross Compilers
+        if: github.event.inputs.cross_compilers != ''
+        working-directory: "${{ github.workspace }}/src"
+        run: make build OPT="${{ github.event.inputs.fpc_opt }}"
+
       - name: Install FPC
         working-directory: "${{ github.workspace }}/src"
         run: make install PREFIX="${{ github.workspace }}/bundle/installed"
@@ -86,7 +95,7 @@ jobs:
 
       - name: Tar the bundle
         working-directory: "${{ github.workspace }}"
-        run: tar -cvf "${{ github.event.inputs.bundle_name }}.tar" bundle
+        run: tar -cvf bundle.tar bundle/*
 
       - name: Upload the bundle
         uses: actions/upload-artifact@v3
