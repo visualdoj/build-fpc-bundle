@@ -148,8 +148,8 @@ jobs:
       - name: Untar the bundle
         working-directory: "${{ github.workspace }}"
         run: |
-            tar zxvf bundle.tar.gz
-            mv bundle fpc
+            tar zxvf "${{ github.event.inputs.bundle_name }}.tar.gz"
+            mv "${{ github.event.inputs.bundle_name }}" fpc
 
       - name: Get binutils
         if: runner.os == 'Windows'
