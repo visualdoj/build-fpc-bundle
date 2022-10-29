@@ -1,6 +1,6 @@
 name: Build FPC bundle from SVN
 
-# DEPRECATED: Free Pascal developers no longer uses SVN
+# DEPRECATED: Free Pascal developers no longer use SVN
 
 on:
   workflow_dispatch:

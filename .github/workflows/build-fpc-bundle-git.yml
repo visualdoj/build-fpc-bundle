@@ -7,7 +7,7 @@ on:
         description: 'GitHub environment (e.g. ubuntu-latest, windows-latest, macos-latest)'
         required: true
       fpc:
-        description: 'Compiler version ("system" is for installing from packet manager)'
+        description: 'Compiler version ("system" is for installing FPC from packet manager)'
         required: false
         default: 'system'
       fpc_opt:
@@ -70,7 +70,7 @@ jobs:
         working-directory: "${{ github.workspace }}"
         run: git clone --branch "${{ github.event.inputs.git_branch }}" "${{ github.event.inputs.git_url }}" src
 
-      - name: Copy FPC source before it will have been polluted
+      - name: Copy FPC source before it will be polluted
         working-directory: "${{ github.workspace }}/src"
         run: git checkout-index --prefix="${{ github.workspace }}/bundle/src/" -a
 
@@ -99,13 +99,13 @@ jobs:
 
       - name: Tar the bundle
         working-directory: "${{ github.workspace }}"
-        run: tar -cvf bundle.tar bundle/*
+        run: tar -czvf bundle.tar bundle/*
 
       - name: Upload the bundle
         uses: actions/upload-artifact@v3
         with:
-          name: "${{ github.event.inputs.bundle_name }}"
-          path: "${{ github.workspace }}/bundle.tar"
+          name: "${{ github.event.inputs.bundle_name }}.tar.gz"
+          path: "${{ github.workspace }}/bundle.tar.gz"
 
   Build-Bundle-Cross:
     name: "Build FPC cross compilers"
@@ -118,7 +118,7 @@ jobs:
         uses: actions/download-artifact@v3
         id: download
         with:
-            name: "${{ github.event.inputs.bundle_name }}"
+            name: "${{ github.event.inputs.bundle_name }}.tar.gz"
             path: "${{ github.workspace }}"
 
       - name: Install GNU Core Utils (choco)
@@ -134,7 +134,7 @@ jobs:
       - name: Untar the bundle
         working-directory: "${{ github.workspace }}"
         run: |
-            tar xvf bundle.tar
+            tar zxvf bundle.tar.gz
             mv bundle fpc
 
       - name: Get binutils
@@ -178,18 +178,18 @@ jobs:
             set PATH=%PATH%;${{ github.workspace }}\Android\android-ndk-r23b\toolchains\arm-linux-androideabi-4.6\prebuilt\windows\bin
             make clean crossall crossinstall OS_TARGET=android CPU_TARGET=arm CROSSOPT="-Cparmv7a -Cfvfpv3" INSTALL_PREFIX="${{ github.workspace }}/bundle-cross/installed"
 
-      - name: Build FPC cross compiler (windows to win64)
+      - name: Build FPC cross compiler (win64 to win32)
         if: always() && (runner.os == 'Windows')
         working-directory: "${{ github.workspace }}/fpc/src"
         run: |
-            make clean all OS_TARGET=win64 CPU_TARGET=x86_64 OPT="${{ github.event.inputs.fpc_opt }}" PREFIX="${{ github.workspace }}/bundle-cross/installed"
-            make crossinstall OS_TARGET=win64 CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            make clean all    OS_TARGET=win32 CPU_TARGET=i386 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make crossinstall OS_TARGET=win32 CPU_TARGET=i386 PREFIX="${{ github.workspace }}/bundle-cross/installed"
 
       - name: Build FPC cross compiler (windows to x86_64-linux)
         if: always() && (runner.os == 'Windows')
         working-directory: "${{ github.workspace }}/fpc/src"
         run: |
-            make clean all OS_TARGET=linux CPU_TARGET=x86_64 OPT="${{ github.event.inputs.fpc_opt }}" PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            make clean all    OS_TARGET=linux CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=linux CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed"
 
       - name: Tar the cross bundle
