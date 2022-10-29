@@ -47,7 +47,7 @@ jobs:
       - name: Install Free Pascal Compiler (choco)
         if: (runner.os == 'Windows') && (github.event.inputs.fpc == 'system')
         run: |
-          choco install freepascal
+          choco install freepascal --yes
           refreshenv
 
       - name: Workaround for missed PATH settings (choco)
@@ -155,7 +155,7 @@ jobs:
         if: runner.os != 'Windows'
         run: |
             echo "${{ github.workspace }}/fpc/installed/bin" >> $GITHUB_PATH
-            echo "${{ github.workspace }}/fpc/lib/fpc/${{ github.inputs.fpc_version }}" >> $GITHUB_PATH
+            echo "${{ github.workspace }}/fpc/lib/fpc/${{ github.event.inputs.fpc_opt }}" >> $GITHUB_PATH
 
       - name: Print FPC version
         run: fpc -i
