@@ -149,7 +149,7 @@ jobs:
 
       - name: Add FPC to PATH (Windows)
         if: runner.os == 'Windows'
-        run: echo ${{ github.workspace }}\fpc\installed\bin\i386-win32 >> $GITHUB_PATH
+        run: echo ${{ github.workspace }}/fpc/installed/bin/i386-win32 >> $GITHUB_PATH
 
       - name: Add FPC to PATH (non-windows)
         if: runner.os != 'Windows'
