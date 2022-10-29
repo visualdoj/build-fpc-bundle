@@ -100,7 +100,7 @@ jobs:
 
       - name: Tar the bundle
         working-directory: "${{ github.workspace }}"
-        run: tar -czvf bundle.tar bundle/*
+        run: tar -czvf bundle.tar.gz bundle/*
 
       - name: Upload the bundle
         uses: actions/upload-artifact@v3
