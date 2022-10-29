@@ -155,7 +155,7 @@ jobs:
         if: runner.os != 'Windows'
         run: |
             echo "${{ github.workspace }}/fpc/installed/bin" >> $GITHUB_PATH
-            echo "${{ github.workspace }}/fpc/lib/fpc/${{ github.event.inputs.fpc_opt }}" >> $GITHUB_PATH
+            echo "${{ github.workspace }}/fpc/lib/fpc/${{ github.event.inputs.fpc_version }}" >> $GITHUB_PATH
 
       - name: Print FPC version
         run: fpc -i
