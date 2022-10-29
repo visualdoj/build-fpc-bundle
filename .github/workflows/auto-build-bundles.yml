@@ -25,4 +25,5 @@ jobs:
       git_branch: main
       bundle_name: fpc-fixes_3_2.x86_64-macos
       fpc_opt: "-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
+      fpc_version: 3.3.1
     secrets: inherit
