@@ -179,7 +179,7 @@ jobs:
       - name: Copy cross tools
         if: runner.os != 'Windows'
         run: |
-            cp -r ${{ github.workspace }}/repository/src/cross/* ${{ github.workspace }}/fpc/installed/bin/*
+            cp -r ${{ github.workspace }}/repository/src/cross/* ${{ github.workspace }}/fpc/installed/bin/
             ls -la ${{ github.workspace }}/repository/src/cross/*
             ls -la ${{ github.workspace }}/fpc/installed/bin/*
 
