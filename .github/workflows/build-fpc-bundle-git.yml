@@ -197,6 +197,7 @@ jobs:
         run: |
             make clean all    OS_TARGET=win64 CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=win64 CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "win64-x86_64" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
       - name: Build FPC cross compiler (win64 to win32)
         if: false && (runner.os == 'Windows')
@@ -204,6 +205,7 @@ jobs:
         run: |
             make clean all    OS_TARGET=win32 CPU_TARGET=i386 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=win32 CPU_TARGET=i386 PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "win32-i386" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
       - name: Build FPC cross compiler (windows to x86_64-linux)
         if: always() && (runner.os == 'Windows')
@@ -211,6 +213,7 @@ jobs:
         run: |
             make clean all    OS_TARGET=linux CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=linux CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "x86_64-linux" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
       - name: Build FPC cross compiler (Linux to linux-i386)
         if: always() && (runner.os == 'Linux')
@@ -218,6 +221,7 @@ jobs:
         run: |
             make clean all    OS_TARGET=linux CPU_TARGET=i386 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=linux CPU_TARGET=i386 PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "linux-i386" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
       - name: Build FPC cross compiler (Linux to linux-arm)
         if: always() && (runner.os == 'Linux')
@@ -225,6 +229,7 @@ jobs:
         run: |
             make clean all    OS_TARGET=linux CPU_TARGET=arm PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=linux CPU_TARGET=arm PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "linux-arm" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
       - name: Build FPC cross compiler (Linux to linux-aarch64)
         if: always() && (runner.os == 'Linux')
@@ -232,6 +237,7 @@ jobs:
         run: |
             make clean all    OS_TARGET=linux CPU_TARGET=aarch64 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=linux CPU_TARGET=aarch64 PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "linux-aarch64" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
       - name: Build FPC cross compiler (Linux to linux-powerpc)
         if: always() && (runner.os == 'Linux')
@@ -239,6 +245,7 @@ jobs:
         run: |
             make clean all    OS_TARGET=linux CPU_TARGET=powerpc PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=linux CPU_TARGET=powerpc PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "linux-powerpc" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
       - name: Build FPC cross compiler (Linux to linux-powerpc64)
         if: always() && (runner.os == 'Linux')
@@ -246,6 +253,7 @@ jobs:
         run: |
             make clean all    OS_TARGET=linux CPU_TARGET=powerpc64 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=linux CPU_TARGET=powerpc64 PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "linux-powerpc64" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
       - name: Build FPC cross compiler (Linux to linux-sparc)
         if: always() && (runner.os == 'Linux')
@@ -253,6 +261,7 @@ jobs:
         run: |
             make clean all    OS_TARGET=linux CPU_TARGET=sparc PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=linux CPU_TARGET=sparc PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "linux-sparc" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
       - name: Build FPC cross compiler (Linux to linux-mips)
         if: always() && (runner.os == 'Linux')
@@ -260,6 +269,7 @@ jobs:
         run: |
             make clean all    OS_TARGET=linux CPU_TARGET=mips PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=linux CPU_TARGET=mips PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "linux-mips" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
       - name: Build FPC cross compiler (Linux to linux-mipsel)
         if: always() && (runner.os == 'Linux')
@@ -267,6 +277,7 @@ jobs:
         run: |
             make clean all    OS_TARGET=linux CPU_TARGET=mipsel PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=linux CPU_TARGET=mipsel PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "linux-mipsel" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
       - name: Build FPC cross compiler (Linux to linux-riscv)
         if: always() && (runner.os == 'Linux')
@@ -274,6 +285,7 @@ jobs:
         run: |
             make clean all    OS_TARGET=linux CPU_TARGET=riscv PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=linux CPU_TARGET=riscv PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "linux-riscv" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
       - name: Build FPC cross compiler (Linux to embedded-riscv)
         if: always() && (runner.os == 'Linux')
@@ -281,6 +293,7 @@ jobs:
         run: |
             make clean all    OS_TARGET=embedded CPU_TARGET=riscv PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=embedded CPU_TARGET=riscv PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "embedded-riscv" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
       - name: Build FPC cross compiler (Linux to embedded-wasm)
         if: always() && (runner.os == 'Linux')
@@ -288,6 +301,7 @@ jobs:
         run: |
             make clean all    OS_TARGET=embedded CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=embedded CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "embedded-wasm" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
       - name: Build FPC cross compiler (Linux to win32)
         if: always() && (runner.os == 'Linux')
@@ -295,6 +309,7 @@ jobs:
         run: |
             make clean all    OS_TARGET=win32 CPU_TARGET=i386 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=win32 CPU_TARGET=i386 PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "win32-i386" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
       - name: Build FPC cross compiler (Linux to win64)
         if: always() && (runner.os == 'Linux')
@@ -302,6 +317,7 @@ jobs:
         run: |
             make clean all    OS_TARGET=win64 CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=win64 CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "win64-x86_64" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
       - name: Tar the cross bundle
         if: always()
