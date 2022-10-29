@@ -90,11 +90,7 @@ jobs:
 
       - name: Build FPC
         working-directory: "${{ github.workspace }}/src"
-        run: make build OPT="${{ github.event.inputs.fpc_opt }}"
-
-      - name: Install FPC
-        working-directory: "${{ github.workspace }}/src"
-        run: make install PREFIX="${{ github.workspace }}/bundle/installed"
+        run: make build install OPT="${{ github.event.inputs.fpc_opt }}" PREFIX="${{ github.workspace }}/bundle/installed"
 
       - name: Generate info
         working-directory: "${{ github.workspace }}/bundle"
@@ -274,11 +270,18 @@ jobs:
             make crossinstall OS_TARGET=linux CPU_TARGET=i386 PREFIX="${{ github.workspace }}/bundle-cross/installed"
             echo "linux-i386" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
+      - name: Build FPC cross compiler (Linux to android-arm)
+        if: always() && (runner.os == 'Windows')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            make clean crossall crossinstall OS_TARGET=android CPU_TARGET=arm CROSSOPT="-Cparmv7a -Cfvfpv3" INSTALL_PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+
       - name: Build FPC cross compiler (Linux to linux-arm)
         if: always() && (runner.os == 'Linux')
         working-directory: "${{ github.workspace }}/fpc/src"
         run: |
-            make clean all    OS_TARGET=linux CPU_TARGET=arm PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            sudo apt-get install -y alien libncurses5-dev libXp-dev libgtk2.0-dev
+            make clean all    OS_TARGET=linux CPU_TARGET=arm PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="-dFPC_ARMEL ${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=linux CPU_TARGET=arm PREFIX="${{ github.workspace }}/bundle-cross/installed"
             echo "linux-arm" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
