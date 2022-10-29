@@ -1,0 +1,63 @@
+name: "Make cross FPC"
+author: "Doj"
+
+inputs:
+  target_os:
+    required: true
+  target_cpu:
+    required: true
+  opt:
+    required: false
+    default: ""
+  prefix:
+    required: false
+    default: "${{ github.workspace }}/bundle-cross/installed"
+  sources_dir:
+    required: false
+    default: "${{ github.workspace }}/fpc/src"
+  crossopt:
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  working-directory: "${{ inputs.sources_dir }}"
+  steps:
+    #
+    # https://wiki.freepascal.org/WebAssembly/Compiler
+    #
+    - if: always() && (runner.os == 'Linux') && (inputs.target_cpu == 'wasm')
+      run: |
+           sudo apt-get install lld-12
+           ln -sf /usr/lib/llvm-12/bin/wasm-ld "${{ github.workspace }}/tempbin/wasm32-wasi-wasm-ld"
+           ln -sf /usr/lib/llvm-12/bin/wasm-ld "${{ github.workspace }}/tempbin/wasm32-embedded-wasm-ld"
+
+    - if: always() && (runner.os == 'Windows') && (inputs.target_os == 'wasm')
+      working-directory: "${{ github.workspace }}"
+      run: |
+           choco install llvm --params="'/InstallationPath:${{ github.workspace }}\llvm\'"
+           mklink ${{ github.workspace }}/tempbin/wasm32-wasi-wasm-ld.exe     ${{ github.workspace }}/llvm/wasm-ld.exe
+           mklink ${{ github.workspace }}/tempbin/wasm32-embedded-wasm-ld.exe ${{ github.workspace }}/llvm/wasm-ld.exe
+
+    - if: always() && (runner.os == 'macOS') && (inputs.target_cpu == 'wasm')
+      run: |
+           brew update
+           brew install llvm@11
+           ln -sf /opt/local/bin/wasm-ld-mp-11 "${{ github.workspace }}/tempbin/wasm32-wasi-wasm-ld"
+           ln -sf /opt/local/bin/wasm-ld-mp-11 "${{ github.workspace }}/tempbin/wasm32-embedded-wasm-ld"
+
+    - if: always() && (runner.os == 'Linux') && (inputs.target_os == 'linux') && (inputs.target_cpu == 'arm')
+      run: |
+           sudo apt-get install -y alien libncurses5-dev libXp-dev libgtk2.0-dev
+
+    - if: always() && (runner.os == 'Windows') && (inputs.target_os == 'android') && (inputs.target_cpu == 'arm')
+      run: |
+           choco install android-ndk --params="'/InstallationPath:${{ github.workspace }}\Android\'"
+           ls ${{ github.workspace }}\Android\
+           refreshenv
+           echo "${{ github.workspace }}\\Android\\android-ndk-r23b\\toolchains\\arm-linux-androideabi-4.6\\prebuilt\\windows\\bin" >> $GITHUB_PATH
+
+    - if: always()
+      run: |
+           make clean all crossinstall OS_TARGET=${{ inputs.target_os }} CPU_TARGET=${{ inputs.target_cpu }} PREFIX="${{ inputs.prefix }}" CROSSOPT="${{ inputs.crossopt }}" OPT="${{ inputs.opt }}"
+           echo "${{ inputs.target_os }}-${{ inputs.target_cpu }}" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
