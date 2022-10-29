@@ -90,7 +90,7 @@ jobs:
 
       - name: Build FPC
         working-directory: "${{ github.workspace }}/src"
-        run: make build OPT="${{ github.event.inputs.fpc_opt }}"
+        run: make build OPT="-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/ ${{ github.event.inputs.fpc_opt }}"
 
       - name: Install FPC
         working-directory: "${{ github.workspace }}/src"
@@ -111,6 +111,14 @@ jobs:
         with:
           name: "${{ github.event.inputs.bundle_name }}.tar.gz"
           path: "${{ github.workspace }}/bundle.tar.gz"
+
+      - name: Upload the bundle to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          asset_name: "${{ github.workspace }}/fpc-bundle-${{ github.event.inputs.os }}.tar.gz"
+          file: "${{ github.workspace }}/bundle.tar.gz"
+          file_glob: true
 
   Build-Bundle-Cross:
     name: "Build FPC cross compilers"
@@ -413,3 +421,11 @@ jobs:
         with:
           name: "${{ github.event.inputs.bundle_name }}-cross.tar.gz"
           path: "${{ github.workspace }}/bundle-cross.tar.gz"
+
+      - name: Upload the cross bundle to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          asset_name: "${{ github.workspace }}/fpc-bundle-${{ github.event.inputs.os }}-cross.tar.gz"
+          file: "${{ github.workspace }}/bundle-cross.tar.gz"
+          file_glob: true
