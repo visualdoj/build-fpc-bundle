@@ -27,4 +27,4 @@ jobs:
         with:
           workflow: Build FPC bundle from GIT
           token: ${{ secrets.BUILD_TOKEN }}
-          inputs: '{ "os": "macos-latest", "git_branch": "main", "bundle_name": "fpc-main.x86_64-macos", "fpc_opt": "-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/" }'
+          inputs: '{ "os": "macos-latest", "git_branch": "main", "bundle_name": "fixes_3_2", "fpc_opt": "-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/" }'
