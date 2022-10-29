@@ -1,4 +1,5 @@
 name: Build FPC bundle from GIT
+run-name: "Build FPC for ${{ github.event.inputs.os }}"
 
 on:
   workflow_dispatch:
