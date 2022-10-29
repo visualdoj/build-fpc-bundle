@@ -2,7 +2,40 @@ name: Build FPC bundle from GIT
 run-name: "Build FPC for ${{ inputs.os }}"
 
 on:
-  [workflow_dispatch, workflow_call]:
+  workflow_dispatch:
+    inputs:
+      os:
+        description: 'GitHub environment (e.g. ubuntu-latest, windows-latest, macos-latest)'
+        required: true
+      fpc:
+        description: 'Compiler version ("system" is for installing FPC from packet manager)'
+        required: false
+        default: 'system'
+      fpc_opt:
+        description: 'Additional options for build process'
+        required: false
+        default: ''
+      git_url:
+        description: 'GIT url of sources'
+        required: false
+        default: 'https://gitlab.com/freepascal.org/fpc/source.git'
+      git_branch:
+        description: 'Branch'
+        required: false
+        default: 'main'
+      bundle_name:
+        description: 'Bundle name'
+        required: false
+        default: 'bundle'
+      cross_compilers:
+        description: 'Build cross compilers'
+        required: false
+        default: 'true'
+      fpc_version:
+        description: 'FPC version'
+        required: false
+        default: '3.2.3'
+  workflow_call:
     inputs:
       os:
         description: 'GitHub environment (e.g. ubuntu-latest, windows-latest, macos-latest)'
