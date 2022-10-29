@@ -90,7 +90,7 @@ jobs:
 
       - name: Build FPC
         working-directory: "${{ github.workspace }}/src"
-        run: make build OPT="-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/ ${{ github.event.inputs.fpc_opt }}"
+        run: make build OPT="${{ github.event.inputs.fpc_opt }}"
 
       - name: Install FPC
         working-directory: "${{ github.workspace }}/src"
@@ -399,7 +399,7 @@ jobs:
         if: always() && (runner.os == 'macOS')
         working-directory: "${{ github.workspace }}/fpc/src"
         run: |
-            make clean all    OS_TARGET=embedded CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/ ${{ github.event.inputs.fpc_opt }}"
+            make clean all    OS_TARGET=embedded CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=embedded CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed"
             echo "embedded-wasm" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
@@ -407,7 +407,7 @@ jobs:
         if: always() && (runner.os == 'macOS')
         working-directory: "${{ github.workspace }}/fpc/src"
         run: |
-            make clean all    OS_TARGET=wasi CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/ ${{ github.event.inputs.fpc_opt }}"
+            make clean all    OS_TARGET=wasi CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=wasi CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed"
             echo "wasi-wasm" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
