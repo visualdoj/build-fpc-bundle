@@ -163,9 +163,9 @@ jobs:
       - name: Add FPC to PATH (Windows)
         if: runner.os == 'Windows'
         run: |
-            mkdir "${{ github.workspace }}/tempbin"
-            echo  "${{ github.workspace }}/tempbin" >> $GITHUB_PATH
-            echo  "${{ github.workspace }}/fpc/installed/bin/i386-win32" >> $GITHUB_PATH
+            mkdir "${{ github.workspace }}\\tempbin"
+            echo  "${{ github.workspace }}\\tempbin" >> $GITHUB_PATH
+            echo  "${{ github.workspace }}\\fpc\\installed\\bin\\i386-win32" >> $GITHUB_PATH
             ls "${{ github.workspace }}/fpc/installed/bin/i386-win32"
 
       - name: Add FPC to PATH (non-windows)
@@ -390,7 +390,8 @@ jobs:
         if: always() && (runner.os == 'macOS')
         working-directory: "${{ github.workspace }}/fpc/src"
         run: |
-            sudo port install llvm-11
+            brew update
+            brew install llvm@11
             ln -sf /opt/local/bin/wasm-ld-mp-11 "${{ github.workspace }}/tempbin/wasm32-wasi-wasm-ld"
             ln -sf /opt/local/bin/wasm-ld-mp-11 "${{ github.workspace }}/tempbin/wasm32-embedded-wasm-ld"
 
@@ -398,7 +399,7 @@ jobs:
         if: always() && (runner.os == 'macOS')
         working-directory: "${{ github.workspace }}/fpc/src"
         run: |
-            make clean all    OS_TARGET=embedded CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make clean all    OS_TARGET=embedded CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/ ${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=embedded CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed"
             echo "embedded-wasm" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
@@ -406,7 +407,7 @@ jobs:
         if: always() && (runner.os == 'macOS')
         working-directory: "${{ github.workspace }}/fpc/src"
         run: |
-            make clean all    OS_TARGET=wasi CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make clean all    OS_TARGET=wasi CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/ ${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=wasi CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed"
             echo "wasi-wasm" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
