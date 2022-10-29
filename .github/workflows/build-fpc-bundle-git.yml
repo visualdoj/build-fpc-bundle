@@ -212,6 +212,97 @@ jobs:
             make clean all    OS_TARGET=linux CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=linux CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed"
 
+      - name: Build FPC cross compiler (Linux to linux-i386)
+        if: always() && (runner.os == 'Linux')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            make clean all    OS_TARGET=linux CPU_TARGET=i386 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make crossinstall OS_TARGET=linux CPU_TARGET=i386 PREFIX="${{ github.workspace }}/bundle-cross/installed"
+
+      - name: Build FPC cross compiler (Linux to linux-arm)
+        if: always() && (runner.os == 'Linux')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            make clean all    OS_TARGET=linux CPU_TARGET=arm PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make crossinstall OS_TARGET=linux CPU_TARGET=arm PREFIX="${{ github.workspace }}/bundle-cross/installed"
+
+      - name: Build FPC cross compiler (Linux to linux-aarch64)
+        if: always() && (runner.os == 'Linux')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            make clean all    OS_TARGET=linux CPU_TARGET=aarch64 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make crossinstall OS_TARGET=linux CPU_TARGET=aarch64 PREFIX="${{ github.workspace }}/bundle-cross/installed"
+
+      - name: Build FPC cross compiler (Linux to linux-powerpc)
+        if: always() && (runner.os == 'Linux')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            make clean all    OS_TARGET=linux CPU_TARGET=powerpc PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make crossinstall OS_TARGET=linux CPU_TARGET=powerpc PREFIX="${{ github.workspace }}/bundle-cross/installed"
+
+      - name: Build FPC cross compiler (Linux to linux-powerpc64)
+        if: always() && (runner.os == 'Linux')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            make clean all    OS_TARGET=linux CPU_TARGET=powerpc64 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make crossinstall OS_TARGET=linux CPU_TARGET=powerpc64 PREFIX="${{ github.workspace }}/bundle-cross/installed"
+
+      - name: Build FPC cross compiler (Linux to linux-sparc)
+        if: always() && (runner.os == 'Linux')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            make clean all    OS_TARGET=linux CPU_TARGET=sparc PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make crossinstall OS_TARGET=linux CPU_TARGET=sparc PREFIX="${{ github.workspace }}/bundle-cross/installed"
+
+      - name: Build FPC cross compiler (Linux to linux-mips)
+        if: always() && (runner.os == 'Linux')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            make clean all    OS_TARGET=linux CPU_TARGET=mips PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make crossinstall OS_TARGET=linux CPU_TARGET=mips PREFIX="${{ github.workspace }}/bundle-cross/installed"
+
+      - name: Build FPC cross compiler (Linux to linux-mipsel)
+        if: always() && (runner.os == 'Linux')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            make clean all    OS_TARGET=linux CPU_TARGET=mipsel PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make crossinstall OS_TARGET=linux CPU_TARGET=mipsel PREFIX="${{ github.workspace }}/bundle-cross/installed"
+
+      - name: Build FPC cross compiler (Linux to linux-riscv)
+        if: always() && (runner.os == 'Linux')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            make clean all    OS_TARGET=linux CPU_TARGET=riscv PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make crossinstall OS_TARGET=linux CPU_TARGET=riscv PREFIX="${{ github.workspace }}/bundle-cross/installed"
+
+      - name: Build FPC cross compiler (Linux to embedded-riscv)
+        if: always() && (runner.os == 'Linux')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            make clean all    OS_TARGET=embedded CPU_TARGET=riscv PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make crossinstall OS_TARGET=embedded CPU_TARGET=riscv PREFIX="${{ github.workspace }}/bundle-cross/installed"
+
+      - name: Build FPC cross compiler (Linux to embedded-wasm)
+        if: always() && (runner.os == 'Linux')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            make clean all    OS_TARGET=embedded CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make crossinstall OS_TARGET=embedded CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed"
+
+      - name: Build FPC cross compiler (Linux to win32)
+        if: always() && (runner.os == 'Linux')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            make clean all    OS_TARGET=win32 CPU_TARGET=i386 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make crossinstall OS_TARGET=win32 CPU_TARGET=i386 PREFIX="${{ github.workspace }}/bundle-cross/installed"
+
+      - name: Build FPC cross compiler (Linux to win64)
+        if: always() && (runner.os == 'Linux')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            make clean all    OS_TARGET=win64 CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make crossinstall OS_TARGET=win64 CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed"
+
       - name: Tar the cross bundle
         if: always()
         working-directory: "${{ github.workspace }}"
