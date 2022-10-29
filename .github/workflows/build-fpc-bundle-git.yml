@@ -2,7 +2,7 @@ name: Build FPC bundle from GIT
 run-name: "Build FPC for ${{ github.event.inputs.os }}"
 
 on:
-  workflow_dispatch:
+  workflow_dispatch, workflow_call:
     inputs:
       os:
         description: 'GitHub environment (e.g. ubuntu-latest, windows-latest, macos-latest)'
@@ -149,7 +149,7 @@ jobs:
         working-directory: "${{ github.workspace }}"
         run: |
             tar zxvf "bundle-${{ runner.os }}.tar.gz"
-            mv "bundle-${{ runner.os }}" fpc
+            mv bundle fpc
 
       - name: Get binutils
         if: runner.os == 'Windows'
