@@ -189,8 +189,15 @@ jobs:
             set PATH=%PATH%;${{ github.workspace }}\Android\android-ndk-r23b\toolchains\arm-linux-androideabi-4.6\prebuilt\windows\bin
             make clean crossall crossinstall OS_TARGET=android CPU_TARGET=arm CROSSOPT="-Cparmv7a -Cfvfpv3" INSTALL_PREFIX="${{ github.workspace }}/bundle-cross/installed"
 
-      - name: Build FPC cross compiler (win64 to win32)
+      - name: Build FPC cross compiler (win32 to win64)
         if: always() && (runner.os == 'Windows')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            make clean all    OS_TARGET=win64 CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make crossinstall OS_TARGET=win64 CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed"
+
+      - name: Build FPC cross compiler (win64 to win32)
+        if: false && (runner.os == 'Windows')
         working-directory: "${{ github.workspace }}/fpc/src"
         run: |
             make clean all    OS_TARGET=win32 CPU_TARGET=i386 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
