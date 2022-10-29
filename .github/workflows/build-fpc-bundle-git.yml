@@ -236,21 +236,24 @@ jobs:
         if: runner.os == 'Windows'
         run: echo ${{ github.workspace }}\fpc-binaries\i386-win32 | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - if: always()
+      - name: x86_64-win64
+        if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
           target_os:  win64
           target_cpu: x86_64
           opt: "${{ inputs.fpc_opt }}"
 
-      - if: always()
+      - name: i386-win32
+        if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
           target_os:  win32
           target_cpu: i386
           opt: "${{ inputs.fpc_opt }}"
 
-      - if: always()
+      - name: arm-android
+        if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
           target_os:  android
@@ -258,98 +261,104 @@ jobs:
           crossopt: "-Cparmv7a -Cfvfpv3"
           opt: "${{ inputs.fpc_opt }}"
 
-      - if: always()
+      - name: i386-linux
+        if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
           target_os:  linux
           target_cpu: i386
           opt: "${{ inputs.fpc_opt }}"
 
-      - if: always()
+      - name: x86_64-linux
+        if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
           target_os:  linux
           target_cpu: x86_64
           opt: "${{ inputs.fpc_opt }}"
 
-      - if: always()
+      - name: arm-linux
+        if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
           target_os:  linux
           target_cpu: arm
           opt: "-dFPC_ARMEL ${{ inputs.fpc_opt }}"
 
-      - if: always()
+      - name: aarch64-linux
+        if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
           target_os:  linux
           target_cpu: aarch64
           opt: "${{ inputs.fpc_opt }}"
 
-      - if: always()
+      - name: powerpc-linux
+        if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
           target_os:  linux
           target_cpu: powerpc
           opt: "${{ inputs.fpc_opt }}"
 
-      - if: always()
+      - name: powerpc64-linux
+        if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
           target_os:  linux
           target_cpu: powerpc64
           opt: "${{ inputs.fpc_opt }}"
 
-      - if: always()
+      - name: sparc-linux
+        if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
           target_os:  linux
           target_cpu: sparc
           opt: "${{ inputs.fpc_opt }}"
 
-      - if: always()
+      - name: mips-linux
+        if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
           target_os:  linux
           target_cpu: mips
           opt: "${{ inputs.fpc_opt }}"
 
-      - if: always()
+      - name: mipsel-linux
+        if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
           target_os:  linux
           target_cpu: mipsel
           opt: "${{ inputs.fpc_opt }}"
 
-      - if: always()
+      - name: riscv-linux
+        if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
           target_os:  linux
           target_cpu: riscv
           opt: "${{ inputs.fpc_opt }}"
 
-      - if: always()
+      - name: riscv-embedded
+        if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
           target_os:  embedded
           target_cpu: riscv
           opt: "${{ inputs.fpc_opt }}"
 
-      - if: always()
-        uses: ./.github/actions/make-fpc-cross
-        with:
-          target_os:  wasi
-          target_cpu: wasm32
-          opt: "${{ inputs.fpc_opt }}"
-
-      - if: always()
+      - name: wasm32-embedded
+        if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
           target_os:  embedded
           target_cpu: wasm32
           opt: "${{ inputs.fpc_opt }}"
 
-      - if: always()
+      - name: wasm32-wasi
+        if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
           target_os:  wasi
