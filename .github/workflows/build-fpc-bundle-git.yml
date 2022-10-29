@@ -166,8 +166,6 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v3
-        with:
-            path: repository
 
       - name: Download FPC bundle
         uses: actions/download-artifact@v3
@@ -216,8 +214,8 @@ jobs:
       - name: Copy cross tools
         if: runner.os != 'Windows'
         run: |
-            cp -r ${{ github.workspace }}/repository/src/cross/* ${{ github.workspace }}/fpc/installed/bin/
-            ls -la ${{ github.workspace }}/repository/src/cross/*
+            cp -r ${{ github.workspace }}/src/cross/* ${{ github.workspace }}/fpc/installed/bin/
+            ls -la ${{ github.workspace }}/src/cross/*
             ls -la ${{ github.workspace }}/fpc/installed/bin/*
 
       - name: Print FPC version
