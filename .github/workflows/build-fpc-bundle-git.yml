@@ -155,18 +155,25 @@ jobs:
       - name: Add FPC to PATH (Windows)
         if: runner.os == 'Windows'
         run: |
-            echo "${{ github.workspace }}/fpc/installed/bin/i386-win32" >> $GITHUB_PATH
+            mkdir "${{ github.workspace }}/tempbin"
+            echo  "${{ github.workspace }}/tempbin" >> $GITHUB_PATH
+            echo  "${{ github.workspace }}/fpc/installed/bin/i386-win32" >> $GITHUB_PATH
             ls "${{ github.workspace }}/fpc/installed/bin/i386-win32"
 
       - name: Add FPC to PATH (non-windows)
         if: runner.os != 'Windows'
         run: |
-            echo "${{ github.workspace }}/fpc/installed/bin" >> $GITHUB_PATH
-            echo "${{ github.workspace }}/fpc/installed/lib/fpc/${{ github.event.inputs.fpc_version }}" >> $GITHUB_PATH
+            mkdir "${{ github.workspace }}/tempbin"
+            echo  "${{ github.workspace }}/tempbin" >> $GITHUB_PATH
+            echo  "${{ github.workspace }}/fpc/installed/bin" >> $GITHUB_PATH
+            echo  "${{ github.workspace }}/fpc/installed/lib/fpc/${{ github.event.inputs.fpc_version }}" >> $GITHUB_PATH
 
       - name: Copy cross tools
         if: runner.os != 'Windows'
-        run: cp -r "${{ github.workspace }}/repository/src/cross/*" "${{ github.workspace }}/fpc/installed/bin/*"
+        run: |
+            cp -r ${{ github.workspace }}/repository/src/cross/* ${{ github.workspace }}/fpc/installed/bin/*
+            ls -la ${{ github.workspace }}/repository/src/cross/*
+            ls -la ${{ github.workspace }}/fpc/installed/bin/*
 
       - name: Print FPC version
         run: fpc -i
@@ -193,14 +200,14 @@ jobs:
           ls ${{ github.workspace }}\Android\
           refreshenv
 
-      - name: Build FPC cross compiler (windows to android)
+      - name: Build FPC cross compiler (Windows to android)
         if: always() && (runner.os == 'Windows')
         working-directory: "${{ github.workspace }}/fpc/src"
         run: |
             set PATH=%PATH%;${{ github.workspace }}\Android\android-ndk-r23b\toolchains\arm-linux-androideabi-4.6\prebuilt\windows\bin
             make clean crossall crossinstall OS_TARGET=android CPU_TARGET=arm CROSSOPT="-Cparmv7a -Cfvfpv3" INSTALL_PREFIX="${{ github.workspace }}/bundle-cross/installed"
 
-      - name: Build FPC cross compiler (win32 to win64)
+      - name: Build FPC cross compiler (Windows to win64)
         if: always() && (runner.os == 'Windows')
         working-directory: "${{ github.workspace }}/fpc/src"
         run: |
@@ -216,13 +223,40 @@ jobs:
             make crossinstall OS_TARGET=win32 CPU_TARGET=i386 PREFIX="${{ github.workspace }}/bundle-cross/installed"
             echo "win32-i386" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
-      - name: Build FPC cross compiler (windows to x86_64-linux)
+      - name: Build FPC cross compiler (Windows to x86_64-linux)
         if: always() && (runner.os == 'Windows')
         working-directory: "${{ github.workspace }}/fpc/src"
         run: |
             make clean all    OS_TARGET=linux CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=linux CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed"
-            echo "x86_64-linux" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
+            echo "linux-x86_64" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
+
+      #
+      # https://wiki.freepascal.org/WebAssembly/Compiler
+      #
+      - name: Install llvm (choco)
+        if: always() && (runner.os == 'Windows')
+        working-directory: "${{ github.workspace }}"
+        run: |
+            choco install llvm --params="'/InstallationPath:${{ github.workspace }}\llvm\'"
+            mklink ${{ github.workspace }}/tempbin/wasm32-wasi-wasm-ld.exe     ${{ github.workspace }}/llvm/wasm-ld.exe
+            mklink ${{ github.workspace }}/tempbin/wasm32-embedded-wasm-ld.exe ${{ github.workspace }}/llvm/wasm-ld.exe
+
+      - name: Build FPC cross compiler (Windows to wasi-wasm32)
+        if: always() && (runner.os == 'Windows')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            make clean all    OS_TARGET=wasi CPU_TARGET=wasm32 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make crossinstall OS_TARGET=wasi CPU_TARGET=wasm32 PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "wasi-wasm32" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
+
+      - name: Build FPC cross compiler (Windows to embedded-wasm)
+        if: always() && (runner.os == 'Windows')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            make clean all    OS_TARGET=embedded CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make crossinstall OS_TARGET=embedded CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "embedded-wasm" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
       - name: Build FPC cross compiler (Linux to linux-i386)
         if: always() && (runner.os == 'Linux')
@@ -304,6 +338,14 @@ jobs:
             make crossinstall OS_TARGET=embedded CPU_TARGET=riscv PREFIX="${{ github.workspace }}/bundle-cross/installed"
             echo "embedded-riscv" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
+      - name: Install llvm (apt-get)
+        if: always() && (runner.os == 'Linux')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            sudo apt-get install lld-12
+            ln -sf /usr/lib/llvm-12/bin/wasm-ld "${{ github.workspace }}/tempbin/wasm32-wasi-wasm-ld"
+            ln -sf /usr/lib/llvm-12/bin/wasm-ld "${{ github.workspace }}/tempbin/wasm32-embedded-wasm-ld"
+
       - name: Build FPC cross compiler (Linux to embedded-wasm)
         if: always() && (runner.os == 'Linux')
         working-directory: "${{ github.workspace }}/fpc/src"
@@ -311,6 +353,14 @@ jobs:
             make clean all    OS_TARGET=embedded CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=embedded CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed"
             echo "embedded-wasm" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
+
+      - name: Build FPC cross compiler (Linux to wasi-wasm)
+        if: always() && (runner.os == 'Linux')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            make clean all    OS_TARGET=wasi CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make crossinstall OS_TARGET=wasi CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "wasi-wasm" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
       - name: Build FPC cross compiler (Linux to win32)
         if: always() && (runner.os == 'Linux')
@@ -327,6 +377,30 @@ jobs:
             make clean all    OS_TARGET=win64 CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
             make crossinstall OS_TARGET=win64 CPU_TARGET=x86_64 PREFIX="${{ github.workspace }}/bundle-cross/installed"
             echo "win64-x86_64" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
+
+      - name: Install llvm (ports)
+        if: always() && (runner.os == 'macOS')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            sudo port install llvm-11
+            ln -sf /opt/local/bin/wasm-ld-mp-11 "${{ github.workspace }}/tempbin/wasm32-wasi-wasm-ld"
+            ln -sf /opt/local/bin/wasm-ld-mp-11 "${{ github.workspace }}/tempbin/wasm32-embedded-wasm-ld"
+
+      - name: Build FPC cross compiler (macOS to embedded-wasm)
+        if: always() && (runner.os == 'macOS')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            make clean all    OS_TARGET=embedded CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make crossinstall OS_TARGET=embedded CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "embedded-wasm" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
+
+      - name: Build FPC cross compiler (macOS to wasi-wasm)
+        if: always() && (runner.os == 'macOS')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        run: |
+            make clean all    OS_TARGET=wasi CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed" OPT="${{ github.event.inputs.fpc_opt }}"
+            make crossinstall OS_TARGET=wasi CPU_TARGET=wasm PREFIX="${{ github.workspace }}/bundle-cross/installed"
+            echo "wasi-wasm" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
 
       - name: Tar the cross bundle
         if: always()
