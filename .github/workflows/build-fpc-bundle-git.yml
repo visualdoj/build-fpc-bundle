@@ -119,6 +119,11 @@ jobs:
     runs-on: ${{ github.event.inputs.os }}
 
     steps:
+      - name: Check out
+        uses: actions/checkout@v3
+        with:
+            path: repository
+
       - name: Download FPC bundle
         uses: actions/download-artifact@v3
         id: download
@@ -158,6 +163,10 @@ jobs:
         run: |
             echo "${{ github.workspace }}/fpc/installed/bin" >> $GITHUB_PATH
             echo "${{ github.workspace }}/fpc/installed/lib/fpc/${{ github.event.inputs.fpc_version }}" >> $GITHUB_PATH
+
+      - name: Copy cross tools
+        if: runner.os != 'Windows'
+        run: cp -r "${{ github.workspace }}/repository/src/cross/*" "${{ github.workspace }}/fpc/installed/bin/*"
 
       - name: Print FPC version
         run: fpc -i
