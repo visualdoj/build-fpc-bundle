@@ -69,7 +69,7 @@ runs:
 
     - shell: bash
       run: |
-           echo "" >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
+           echo >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
            echo "# ${{ inputs.target_cpu  }}-${{ inputs.target_os  }}" >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
            echo "#IFDEF ${{ inputs.target_os  }}" >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
            echo "#IFDEF cpu${{ inputs.target_cpu }}" >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
