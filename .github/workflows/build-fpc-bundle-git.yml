@@ -10,7 +10,7 @@ on:
       fpc:
         description: 'Compiler version ("system" is for installing FPC from packet manager)'
         required: false
-        default: 'system'
+        default: 'setup-fpc'
       fpc_opt:
         description: 'Additional options for build process'
         required: false
@@ -45,7 +45,7 @@ on:
         description: 'Compiler version ("system" is for installing FPC from packet manager)'
         type: string
         required: false
-        default: 'system'
+        default: 'setup-fpc'
       fpc_opt:
         description: 'Additional options for build process'
         type: string
@@ -107,7 +107,7 @@ jobs:
 
       - name: Install Free Pascal Compiler (GitHub Action)
         if: inputs.fpc == 'setup-fpc'
-        uses: visualdoj/setup-fpc@v0.1.11-beta
+        uses: visualdoj/setup-fpc@main
 
       - name: Print FPC version
         run: fpc -i
