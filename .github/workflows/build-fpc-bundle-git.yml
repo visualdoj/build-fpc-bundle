@@ -122,12 +122,12 @@ jobs:
 
       - name: Copy binutils (Windows)
         if: runner.os == 'Windows'
-        working-directory: "${{ github.workspace }}/bundle"
         run: |
           mkdir installed
           mkdir installed\bin
           mkdir installed\bin\i386-win32
-          cp C:\tools\freepascal\bin\i386-win32\* installed\bin\i386-win32\
+          git clone "https://gitlab.com/freepascal.org/fpc/binaries.git" fpc-binaries
+          git checkout-index --prefix=bundle/installed/bin/i386-win32/ -a -- fpc-binaries/*
 
       - name: Build FPC
         working-directory: "${{ github.workspace }}/src"
