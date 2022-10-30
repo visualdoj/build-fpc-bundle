@@ -133,10 +133,6 @@ jobs:
         working-directory: "${{ github.workspace }}/src"
         run: make build install OPT=${{ inputs.fpc_opt }} PREFIX=${{ github.workspace }}/bundle/installed
 
-      - name: fpc.cfg (non-Windows)
-        if: runner.os != 'Windows'
-        run: "${{ github.workspace }}/bundle/installed/bin/fpcmkcfg" -d basepath="\$FPC_INSTALLED_DIR\$/lib/fpc/${{ inputs.fpc_version }}" -o "${{ github.workspace }}/bundle/fpc.cfg"
-
       - name: Generate info
         working-directory: "${{ github.workspace }}/bundle"
         run: |
