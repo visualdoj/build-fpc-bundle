@@ -131,7 +131,7 @@ jobs:
 
       - name: Build FPC
         working-directory: "${{ github.workspace }}/src"
-        run: make build install OPT="${{ inputs.fpc_opt }}" PREFIX="${{ github.workspace }}/bundle/installed"
+        run: make build install OPT=${{ inputs.fpc_opt }} PREFIX=${{ github.workspace }}/bundle/installed
 
       - name: fpc.cfg (Windows)
         if: runner.os == 'Windows'
