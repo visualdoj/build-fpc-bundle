@@ -66,3 +66,15 @@ runs:
       run: |
            make clean all crossinstall OS_TARGET=${{ inputs.target_os }} CPU_TARGET=${{ inputs.target_cpu }} PREFIX="${{ inputs.prefix }}" CROSSOPT="${{ inputs.crossopt }}" OPT="${{ inputs.opt }}"
            echo "${{ inputs.target_os }}-${{ inputs.target_cpu }}" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
+
+    - shell: bash
+      run: |
+           echo "" >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
+           echo "# ${{ inputs.target_cpu  }}-${{ inputs.target_os  }}" >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
+           echo "#IFDEF ${{ inputs.target_os  }}" >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
+           echo "#IFDEF cpu${{ inputs.target_cpu }}" >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
+
+    - shell: bash
+      run: |
+           echo "#ENDIF" >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
+           echo "#ENDIF" >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
