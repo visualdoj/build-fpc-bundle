@@ -131,6 +131,8 @@ jobs:
           git clone "https://gitlab.com/freepascal.org/fpc/binaries.git" fpc-binaries
           cd fpc-binaries && git checkout-index --prefix="${{ github.workspace }}/bundle/installed/bin/" -a
 
+      - run: make --version
+
       - name: Build FPC
         working-directory: "${{ github.workspace }}/src"
         run: make build install OPT="${{ inputs.fpc_opt }}" PREFIX="${{ github.workspace }}/bundle/installed"
