@@ -139,7 +139,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-             ${{ github.workspace }}\bundle\installed\bin\i386-win32\fpcmkcfg.exe -d basepath='$FPC_INSTALLED_DIR$' -o "${{ github.workspace }}/bundle/fpc.cfg"
+             "${{ github.workspace }}\\bundle\\installed\\bin\\i386-win32\\fpcmkcfg.exe" -d basepath='$FPC_INSTALLED_DIR$' -o "${{ github.workspace }}/bundle/fpc.cfg"
 
       - name: fpc.cfg (non-Windows)
         if: runner.os != 'Windows'
