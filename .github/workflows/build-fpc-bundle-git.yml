@@ -92,7 +92,7 @@ jobs:
           choco install freepascal --yes
           refreshenv
 
-      - name: Workaround for missed PATH settings (choco)
+      - name: Workaround for missing PATH settings (choco)
         if: (runner.os == 'Windows') && (inputs.fpc == 'system')
         run: |
           ls "C:\\tools\\freepascal"
@@ -129,7 +129,7 @@ jobs:
           mkdir installed\bin
           mkdir installed\bin\i386-win32
           git clone "https://gitlab.com/freepascal.org/fpc/binaries.git" fpc-binaries
-          cd fpc-binaries && git checkout-index --prefix="${{ github.workspace }}/bundle/installed/bin/i386-win32/" -a
+          cd fpc-binaries && git checkout-index --prefix="${{ github.workspace }}/bundle/installed/bin/" -a
 
       - name: Build FPC
         working-directory: "${{ github.workspace }}/src"
