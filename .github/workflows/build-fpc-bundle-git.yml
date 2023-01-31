@@ -76,6 +76,7 @@ on:
         type: string
         required: false
         default: '3.2.3'
+
 jobs:
   Build-Bundle:
     name: "Build FPC for ${{ inputs.os }} from ${{ inputs.git_url }}"
@@ -122,6 +123,7 @@ jobs:
 
       - name: Copy binutils (Windows)
         if: runner.os == 'Windows'
+        working-directory: "${{ github.workspace }}"
         run: |
           mkdir installed
           mkdir installed\bin
