@@ -83,7 +83,7 @@ jobs:
     runs-on: ${{ inputs.os }}
     steps:
       # see https://github.com/saadmk11/github-actions-version-updater/issues/49
-      - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - run: git config --global --add safe.directory $(realpath .)
 
       - name: Install Free Pascal Compiler (apt-get)
         if: (runner.os == 'Linux') && (inputs.fpc == 'system')
