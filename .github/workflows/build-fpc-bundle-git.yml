@@ -237,7 +237,7 @@ jobs:
 
       - name: Setup binutils PATH (Windows)
         if: runner.os == 'Windows'
-        run: echo ${{ github.workspace }}\fpc-binaries\i386-win32 | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        run: echo "${{ github.workspace }}\\fpc-binaries\\i386-win32" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: x86_64-win64
         if: always()
