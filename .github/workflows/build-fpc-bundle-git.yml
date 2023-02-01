@@ -188,6 +188,14 @@ jobs:
             name: "${{ inputs.bundle_name }}.tar.gz"
             path: "${{ github.workspace }}"
 
+      - name: Install Free Pascal Compiler (GitHub Action)
+        if: inputs.fpc == 'setup-fpc'
+        uses: visualdoj/setup-fpc@main
+
+      - run: make --version
+
+      - run: where pwd
+
       - name: Install Free Pascal Compiler (choco)
         if: (runner.os == 'Windows') && (inputs.fpc == 'system')
         run: |
