@@ -57,7 +57,7 @@ runs:
       run: |
            choco install android-ndk --params="'/InstallationPath:${{ github.workspace }}\Android\'"
            ls "${{ github.workspace }}\\Android\\"
-           echo "${{ github.workspace }}\\Android\\android-ndk-r23b\\toolchains\\arm-linux-androideabi-4.6\\prebuilt\\windows\\bin" >> $GITHUB_PATH
+           echo "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\arm-linux-androideabi-4.6\\prebuilt\\windows\\bin" >> $GITHUB_PATH
 
     - if: always()
       working-directory: "${{ inputs.sources_dir }}"
