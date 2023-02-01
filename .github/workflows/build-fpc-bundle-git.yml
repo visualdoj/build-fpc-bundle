@@ -193,8 +193,6 @@ jobs:
 
       - run: make --version
 
-      - run: where pwd
-
       - name: Install Free Pascal Compiler (choco)
         if: (runner.os == 'Windows') && (inputs.fpc == 'system')
         run: |
@@ -391,7 +389,7 @@ jobs:
       - name: Tar the cross bundle
         if: always()
         working-directory: "${{ github.workspace }}"
-        run: tar -zcvf "bundle-${{ runner.os }}-cross.tar.gz" bundle-cross/*
+        run: tar -czvf "bundle-${{ runner.os }}-cross.tar.gz" bundle-cross/*
 
       - name: Upload the cross bundle
         if: always()
