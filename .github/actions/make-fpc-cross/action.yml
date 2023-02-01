@@ -59,7 +59,7 @@ runs:
            ls "${{ github.workspace }}\\Android\\"
            ls "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\"
            ls "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\llvm\\"
-           echo "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\arm-linux-androideabi-4.6\\prebuilt\\windows\\bin" >> $GITHUB_PATH
+           echo "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\llvm\\prebuilt\\windows\\bin" >> $GITHUB_PATH
 
     - if: always()
       working-directory: "${{ inputs.sources_dir }}"
