@@ -50,7 +50,7 @@ runs:
     - if: always() && (runner.os == 'Linux') && (inputs.target_os == 'linux') && (inputs.target_cpu == 'arm')
       shell: bash
       run: |
-           sudo apt-get install -y alien libncurses5-dev libxp-dev libgtk2.0-dev
+           sudo apt-get install -y alien libncurses5-dev libxpm4 libgtk2.0-dev
 
     - if: always() && (runner.os == 'Windows') && (inputs.target_os == 'android') && (inputs.target_cpu == 'arm')
       shell: bash
