@@ -307,7 +307,7 @@ jobs:
         with:
           target_os:  embedded
           target_cpu: avr
-          opt: "${{ inputs.fpc_opt }}"
+          opt: "SUBARCH=avr35 ${{ inputs.fpc_opt }}"
 
       - name: m86k-atari
         if: always()
