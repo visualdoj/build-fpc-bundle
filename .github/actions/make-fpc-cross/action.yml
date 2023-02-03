@@ -69,6 +69,13 @@ runs:
       with:
           ndk-version: r25b
 
+    - if: always() && (runner.os == 'Windows')
+      run: |
+          echo %PATH%
+          where pwd
+          where make
+          where fpc
+
     - if: always()
       working-directory: "${{ inputs.sources_dir }}"
       shell: bash
