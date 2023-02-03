@@ -60,8 +60,9 @@ runs:
            ls "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\"
            ls "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\llvm\\"
            ls "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\llvm\\prebuilt\\"
-           echo "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\llvm\\prebuilt\\windows\\bin" >> $GITHUB_PATH
-           ls "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\llvm\\prebuilt\\windows\\bin"
+           ls "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\llvm\\prebuilt\\windows-x86_64\\"
+           echo "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin" >> $GITHUB_PATH
+           ls "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin"
 
     - if: always()
       working-directory: "${{ inputs.sources_dir }}"
