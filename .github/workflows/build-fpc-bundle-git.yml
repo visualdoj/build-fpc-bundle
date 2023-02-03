@@ -376,7 +376,7 @@ jobs:
         with:
           target_os:  embedded
           target_cpu: wasm32
-          opt: "${{ inputs.fpc_opt }}"
+          opt: "BINUTILSPREFIX= OPT=\"-O-\" PP=fpc ${{ inputs.fpc_opt }}"
 
       - name: wasm32-wasi
         if: always()
@@ -384,7 +384,7 @@ jobs:
         with:
           target_os:  wasi
           target_cpu: wasm32
-          opt: "${{ inputs.fpc_opt }}"
+          opt: "BINUTILSPREFIX= OPT=\"-O-\" PP=fpc ${{ inputs.fpc_opt }}"
 
       - name: Tar the cross bundle
         if: always()
