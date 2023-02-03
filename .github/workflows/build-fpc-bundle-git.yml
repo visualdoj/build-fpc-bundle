@@ -224,6 +224,7 @@ jobs:
           cp "C:\\Program Files (x86)\\GnuWin32\\bin\\pwd.exe" ${{ github.workspace }}/fpc/installed/bin/i386-win32/
           cp "C:\\Program Files (x86)\\GnuWin32\\bin\\date.exe" ${{ github.workspace }}/fpc/installed/bin/i386-win32/
           cp "C:\\Program Files (x86)\\GnuWin32\\bin\\rm.exe" ${{ github.workspace }}/fpc/installed/bin/i386-win32/
+          cp "C:\\Program Files (x86)\\GnuWin32\\bin\\mkdir.exe" ${{ github.workspace }}/fpc/installed/bin/i386-win32/
           make --version
           where pwd
           where make
