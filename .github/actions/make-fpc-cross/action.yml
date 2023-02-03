@@ -59,6 +59,7 @@ runs:
            ls "${{ github.workspace }}\\Android\\"
            ls "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\"
            ls "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\llvm\\"
+           ls "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\llvm\\prebuilt\\"
            echo "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\llvm\\prebuilt\\windows\\bin" >> $GITHUB_PATH
            ls "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\llvm\\prebuilt\\windows\\bin"
 
