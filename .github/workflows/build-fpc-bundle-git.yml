@@ -187,28 +187,6 @@ jobs:
             name: "${{ inputs.bundle_name }}.tar.gz"
             path: "${{ github.workspace }}"
 
-      - name: Install Free Pascal Compiler (GitHub Action)
-        if: inputs.fpc == 'setup-fpc'
-        uses: visualdoj/setup-fpc@main
-
-      - run: make --version
-
-      - name: Install Free Pascal Compiler (choco)
-        if: (runner.os == 'Windows') && (inputs.fpc == 'system')
-        run: |
-          choco install freepascal --yes
-          echo "C:\\tools\\freepascal\\bin\\i386-win32" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          make --version
-          where pwd
-
-      - name: Install GNU Core Utils (choco)
-        if: runner.os == 'Windows'
-        run: |
-          choco install gnuwin32-coreutils.install --params="'/InstallationPath:${{ github.workspace }}\coreutils\'"
-          echo "${{ github.workspace }}\\coreutils\\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          make --version
-          where pwd
-
       - name: List files
         working-directory: "${{ github.workspace }}"
         run: ls -R
@@ -229,6 +207,14 @@ jobs:
         run: |
             echo  "${{ github.workspace }}\\fpc\\installed\\bin\\i386-win32" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
             ls "${{ github.workspace }}\\fpc\\installed\\bin\\i386-win32"
+
+      - name: Install GNU Core Utils (choco)
+        if: runner.os == 'Windows'
+        run: |
+          choco install gnuwin32-coreutils.install --params="'/InstallationPath:${{ github.workspace }}\coreutils\'"
+          cp -r ${{ github.workspace }}/coreutils/bin/* ${{ github.workspace }}/fpc/installed/bin/i386-win32/
+          make --version
+          where pwd
 
       - name: Add FPC to PATH (non-windows)
         if: runner.os != 'Windows'
