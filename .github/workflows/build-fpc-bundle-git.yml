@@ -187,10 +187,6 @@ jobs:
             name: "${{ inputs.bundle_name }}.tar.gz"
             path: "${{ github.workspace }}"
 
-      - name: List files
-        working-directory: "${{ github.workspace }}"
-        run: ls -R
-
       - name: Untar the bundle
         working-directory: "${{ github.workspace }}"
         run: |
@@ -208,16 +204,6 @@ jobs:
             echo  "${{ github.workspace }}\\fpc\\installed\\bin\\i386-win32" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
             ls "${{ github.workspace }}\\fpc\\installed\\bin\\i386-win32"
 
-      - name: Install GNU Core Utils (choco)
-        if: runner.os == 'Windows'
-        run: |
-          choco install gnuwin32-coreutils.install
-          cp "C:\\Program Files (x86)\\GnuWin32\\bin\\pwd.exe" ${{ github.workspace }}/fpc/installed/bin/i386-win32/
-          cp "C:\\Program Files (x86)\\GnuWin32\\bin\\date.exe" ${{ github.workspace }}/fpc/installed/bin/i386-win32/
-          make --version
-          where pwd
-          where make
-
       - name: Add FPC to PATH (non-windows)
         if: runner.os != 'Windows'
         run: |
@@ -231,6 +217,17 @@ jobs:
             ls -la ${{ github.workspace }}/src/cross/*
             ls -la ${{ github.workspace }}/fpc/installed/bin/*
 
+      - name: Install GNU Core Utils (choco)
+        if: runner.os == 'Windows'
+        run: |
+          choco install gnuwin32-coreutils.install
+          cp "C:\\Program Files (x86)\\GnuWin32\\bin\\pwd.exe" ${{ github.workspace }}/fpc/installed/bin/i386-win32/
+          cp "C:\\Program Files (x86)\\GnuWin32\\bin\\date.exe" ${{ github.workspace }}/fpc/installed/bin/i386-win32/
+          cp "C:\\Program Files (x86)\\GnuWin32\\bin\\rm.exe" ${{ github.workspace }}/fpc/installed/bin/i386-win32/
+          make --version
+          where pwd
+          where make
+
       - name: Print FPC version
         run: fpc -i
 
@@ -240,7 +237,11 @@ jobs:
             mkdir bundle-cross
             cp -r fpc/* bundle-cross/
 
-      - name: Setup binutils PATH (Windows)
+      - name: List files
+        working-directory: "${{ github.workspace }}"
+        run: ls -R
+
+      - name: Setup fpc binaries PATH (Windows)
         if: runner.os == 'Windows'
         run: |
             echo "${{ github.workspace }}\\fpc-binaries\\i386-win32" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
