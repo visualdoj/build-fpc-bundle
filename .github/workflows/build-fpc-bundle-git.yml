@@ -211,8 +211,8 @@ jobs:
       - name: Install GNU Core Utils (choco)
         if: runner.os == 'Windows'
         run: |
-          choco install gnuwin32-coreutils.install --params="'/InstallationPath:${{ github.workspace }}\coreutils\'"
-          cp -r ${{ github.workspace }}/coreutils/bin/* ${{ github.workspace }}/fpc/installed/bin/i386-win32/
+          choco install gnuwin32-coreutils.install
+          cp -r "C:\\Program Files (x86)\\GnuWin32\\bin\\*" ${{ github.workspace }}/fpc/installed/bin/i386-win32/
           make --version
           where pwd
 
