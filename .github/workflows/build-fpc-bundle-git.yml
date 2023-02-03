@@ -212,9 +212,10 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           choco install gnuwin32-coreutils.install
-          cp -r "C:\\Program Files (x86)\\GnuWin32\\bin\\*" ${{ github.workspace }}/fpc/installed/bin/i386-win32/
+          cp "C:\\Program Files (x86)\\GnuWin32\\bin\\pwd.exe" ${{ github.workspace }}/fpc/installed/bin/i386-win32/
           make --version
           where pwd
+          where make
 
       - name: Add FPC to PATH (non-windows)
         if: runner.os != 'Windows'
