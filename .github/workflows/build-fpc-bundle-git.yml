@@ -315,6 +315,22 @@ jobs:
           target_cpu: aarch64
           opt: "${{ inputs.fpc_opt }}"
 
+      - name: avr-embedded
+        if: always()
+        uses: ./.github/actions/make-fpc-cross
+        with:
+          target_os:  embedded
+          target_cpu: avr
+          opt: "${{ inputs.fpc_opt }}"
+
+      - name: m86k-atari
+        if: always()
+        uses: ./.github/actions/make-fpc-cross
+        with:
+          target_os:  atari
+          target_cpu: m86k
+          opt: "${{ inputs.fpc_opt }}"
+
       - name: powerpc-linux
         if: always()
         uses: ./.github/actions/make-fpc-cross
@@ -339,6 +355,14 @@ jobs:
           target_cpu: sparc
           opt: "${{ inputs.fpc_opt }}"
 
+      - name: sparc64-linux
+        if: always()
+        uses: ./.github/actions/make-fpc-cross
+        with:
+          target_os:  linux
+          target_cpu: sparc64
+          opt: "${{ inputs.fpc_opt }}"
+
       - name: mips-linux
         if: always()
         uses: ./.github/actions/make-fpc-cross
@@ -355,20 +379,12 @@ jobs:
           target_cpu: mipsel
           opt: "${{ inputs.fpc_opt }}"
 
-      - name: riscv-linux
+      - name: riscv64-linux
         if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
           target_os:  linux
-          target_cpu: riscv
-          opt: "${{ inputs.fpc_opt }}"
-
-      - name: riscv-embedded
-        if: always()
-        uses: ./.github/actions/make-fpc-cross
-        with:
-          target_os:  embedded
-          target_cpu: riscv
+          target_cpu: riscv64
           opt: "${{ inputs.fpc_opt }}"
 
       - name: wasm32-embedded

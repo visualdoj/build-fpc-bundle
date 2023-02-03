@@ -61,7 +61,7 @@ runs:
            ls "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\llvm\\"
            ls "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\llvm\\prebuilt\\"
            ls "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\llvm\\prebuilt\\windows-x86_64\\"
-           echo "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin" >> $GITHUB_PATH
+           echo "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
            ls "${{ github.workspace }}\\Android\\android-ndk-r25b\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin"
 
     - if: always() && (runner.os == 'Windows') && (inputs.target_os == 'android') && (inputs.target_cpu == 'arm')
