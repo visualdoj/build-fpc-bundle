@@ -84,6 +84,7 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v3
+        path: repository
 
       - name: Install Free Pascal Compiler (apt-get)
         if: (runner.os == 'Linux') && (inputs.fpc == 'system')
@@ -143,7 +144,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-            cp -r ${{ github.workspace }}/bin/i386-win32/* ${{ github.workspace }}/fpc/installed/bin/i386-win32/
+            cp -r ${{ github.workspace }}/repository/bin/i386-win32/* ${{ github.workspace }}/fpc/installed/bin/i386-win32/
 
       - name: fpc.cfg (Windows)
         if: runner.os == 'Windows'
@@ -188,6 +189,7 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v3
+        path: repository
 
       - name: Download FPC bundle
         uses: actions/download-artifact@v3
@@ -222,8 +224,8 @@ jobs:
       - name: Copy cross tools
         if: runner.os != 'Windows'
         run: |
-            cp -r ${{ github.workspace }}/src/cross/* ${{ github.workspace }}/fpc/installed/bin/
-            ls -la ${{ github.workspace }}/src/cross/*
+            cp -r ${{ github.workspace }}/repository/src/cross/* ${{ github.workspace }}/fpc/installed/bin/
+            ls -la ${{ github.workspace }}/repository/src/cross/*
             ls -la ${{ github.workspace }}/fpc/installed/bin/*
 
       - name: Print FPC version
