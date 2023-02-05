@@ -84,8 +84,6 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v3
-        with:
-            path: repository
 
       - name: Install Free Pascal Compiler (apt-get)
         if: (runner.os == 'Linux') && (inputs.fpc == 'system')
@@ -119,10 +117,10 @@ jobs:
 
       - name: Get FPC sources
         working-directory: "${{ github.workspace }}"
-        run: git clone --branch "${{ inputs.git_branch }}" "${{ inputs.git_url }}" src
+        run: git clone --branch "${{ inputs.git_branch }}" "${{ inputs.git_url }}" fpc_src
 
       - name: Copy FPC source before it will be polluted
-        working-directory: "${{ github.workspace }}/src"
+        working-directory: "${{ github.workspace }}/fpc_src"
         run: git checkout-index --prefix="${{ github.workspace }}/bundle/src/" -a
 
       - name: Copy binutils (Windows)
@@ -138,14 +136,14 @@ jobs:
       - run: make --version
 
       - name: Build FPC
-        working-directory: "${{ github.workspace }}/src"
+        working-directory: "${{ github.workspace }}/fpc_src"
         run: make build install OPT="${{ inputs.fpc_opt }}" PREFIX="${{ github.workspace }}/bundle/installed"
 
       - name: Copy gnu programs to fpc bin (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
-            cp -r ${{ github.workspace }}/repository/bin/i386-win32/* ${{ github.workspace }}/fpc/installed/bin/i386-win32/
+            cp -r ${{ github.workspace }}/bin/i386-win32/* ${{ github.workspace }}/fpc/installed/bin/i386-win32/
 
       - name: fpc.cfg (Windows)
         if: runner.os == 'Windows'
@@ -190,8 +188,6 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v3
-        with:
-            path: repository
 
       - name: Download FPC bundle
         uses: actions/download-artifact@v3
@@ -226,8 +222,8 @@ jobs:
       - name: Copy cross tools
         if: runner.os != 'Windows'
         run: |
-            cp -r ${{ github.workspace }}/repository/src/cross/* ${{ github.workspace }}/fpc/installed/bin/
-            ls -la ${{ github.workspace }}/repository/src/cross/*
+            cp -r ${{ github.workspace }}/src/cross/* ${{ github.workspace }}/fpc/installed/bin/
+            ls -la ${{ github.workspace }}/src/cross/*
             ls -la ${{ github.workspace }}/fpc/installed/bin/*
 
       - name: Print FPC version
