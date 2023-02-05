@@ -82,6 +82,9 @@ jobs:
     name: "Build FPC for ${{ inputs.os }} from ${{ inputs.git_url }}"
     runs-on: ${{ inputs.os }}
     steps:
+      - name: Check out
+        uses: actions/checkout@v3
+
       - name: Install Free Pascal Compiler (apt-get)
         if: (runner.os == 'Linux') && (inputs.fpc == 'system')
         run: sudo apt-get install fpc
@@ -135,6 +138,12 @@ jobs:
       - name: Build FPC
         working-directory: "${{ github.workspace }}/src"
         run: make build install OPT="${{ inputs.fpc_opt }}" PREFIX="${{ github.workspace }}/bundle/installed"
+
+      - name: Copy gnu programs to fpc bin (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+            cp -r ${{ github.workspace }}/bin/i386-win32/* ${{ github.workspace }}/fpc/installed/bin/i386-win32/
 
       - name: fpc.cfg (Windows)
         if: runner.os == 'Windows'
