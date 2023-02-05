@@ -87,7 +87,7 @@ runs:
           where make
           where fpc
           cat "${{ github.workspace }}\\PATH.txt"
-          echo "path=$(cat ${{ github.workspace }}\\PATH.txt)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          echo "path=$(cat PATH.txt)" >>$GITHUB_OUTPUT
 
     - if: always() && (runner.os == 'Windows')
       working-directory: "${{ inputs.sources_dir }}"
