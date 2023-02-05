@@ -84,7 +84,8 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v3
-        path: repository
+        with:
+            path: repository
 
       - name: Install Free Pascal Compiler (apt-get)
         if: (runner.os == 'Linux') && (inputs.fpc == 'system')
@@ -189,7 +190,8 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v3
-        path: repository
+        with:
+            path: repository
 
       - name: Download FPC bundle
         uses: actions/download-artifact@v3
