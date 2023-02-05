@@ -25,10 +25,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - if: always()
-      shell: bash
-      run: echo "::group::Installing prerequisites"
-
     - if: always() && (runner.os == 'Windows')
       shell: bash
       run: echo -n "${{ inputs.fpc_bin }};${{ inputs.fpc_bin }}" >PATH.txt
@@ -93,16 +89,13 @@ runs:
           cat "${{ github.workspace }}\\PATH.txt"
           echo "path=$(cat ${{ github.workspace }}\\PATH.txt)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
-    - if: always()
-      shell: bash
-      run: echo "::endgroup::"
-
     - if: always() && (runner.os == 'Windows')
       working-directory: "${{ inputs.sources_dir }}"
       shell: bash
       run: |
            make clean all crossinstall OS_TARGET=${{ inputs.target_os }} CPU_TARGET=${{ inputs.target_cpu }} PREFIX="${{ inputs.prefix }}" CROSSOPT="${{ inputs.crossopt }}" OPT="${{ inputs.opt }}" PATH="${{ steps.windows_path.outputs.path }}"
            echo "${{ inputs.target_os }}-${{ inputs.target_cpu }}" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
+           echo "* ${{ inputs.target_os }}-${{ inputs.target_cpu }}" >>$GITHUB_STEP_SUMMARY
 
     - if: always() && (runner.os != 'Windows')
       working-directory: "${{ inputs.sources_dir }}"
@@ -110,6 +103,7 @@ runs:
       run: |
            make clean all crossinstall OS_TARGET=${{ inputs.target_os }} CPU_TARGET=${{ inputs.target_cpu }} PREFIX="${{ inputs.prefix }}" CROSSOPT="${{ inputs.crossopt }}" OPT="${{ inputs.opt }}"
            echo "${{ inputs.target_os }}-${{ inputs.target_cpu }}" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
+           echo "* ${{ inputs.target_os }}-${{ inputs.target_cpu }}" >>$GITHUB_STEP_SUMMARY
 
     - shell: bash
       run: |
