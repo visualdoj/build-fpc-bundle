@@ -116,7 +116,6 @@ runs:
       run: |
            "${{ inputs.fpc_bin }}\make.exe" clean all crossinstall CPU_TARGET=${{ inputs.target_cpu }} OS_TARGET=${{ inputs.target_os }} PREFIX="${{ inputs.prefix }}" CROSSOPT="${{ inputs.crossopt }}" OPT="${{ inputs.opt }}" PATH="${{ steps.windows_path.outputs.path }}" ${{ inputs.make_opt }}
            echo "${{ inputs.target_cpu }}-${{ inputs.target_os }}" >>"${{ github.workspace }}\bundle-cross\info\cross-list.txt"
-           echo "* ${{ inputs.target_cpu }}-${{ inputs.target_os }}" >>$GITHUB_STEP_SUMMARY
 
     - if: always() && (runner.os != 'Windows')
       working-directory: "${{ inputs.sources_dir }}"
@@ -124,7 +123,6 @@ runs:
       run: |
            make clean all crossinstall CPU_TARGET=${{ inputs.target_cpu }} OS_TARGET=${{ inputs.target_os }} PREFIX="${{ inputs.prefix }}" CROSSOPT="${{ inputs.crossopt }}" OPT="${{ inputs.opt }}"
            echo "${{ inputs.target_cpu }}-${{ inputs.target_os }}" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
-           echo "* ${{ inputs.target_cpu }}-${{ inputs.target_os }}" >>$GITHUB_STEP_SUMMARY
 
     - shell: bash
       run: |

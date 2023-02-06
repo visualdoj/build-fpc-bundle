@@ -34,3 +34,9 @@ jobs:
       fpc_opt: "-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
       fpc_version: 3.3.1
     secrets: inherit
+
+  Final:
+    if: always()
+    needs: [Build-Windows-3_2, Build-Linux-3_2, Build-Windows-main, Build-macOS-main]
+    steps:
+      - run: echo "# 🎉 Auto builds have been finished!" >>$GITHUB_STEP_SUMMARY

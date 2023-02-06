@@ -537,7 +537,7 @@ jobs:
   Aggregate-Cross:
     name: "Aggregate"
     needs: Build-Cross
-    if: inputs.cross_compilers != ''
+    if: always() && (inputs.cross_compilers != '')
     runs-on: ${{ inputs.os }}
 
     steps:
