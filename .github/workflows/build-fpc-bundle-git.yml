@@ -185,14 +185,14 @@ jobs:
     if: inputs.cross_compilers != ''
     runs-on: ${{ inputs.os }}
     continue-on-error: true # ${{ !matrix.necessary }}
+    fail-fast: false
     strategy:
       matrix:
-        cpu: [""]
-        os: [""]
         opt: ["${{ inputs.fpc_opt }}"]
-        crossopt: [""]
-        make_opt: [""]
         necessary: [false]
+        exclude:
+          - cpu: ""
+          - os:  ""
         include:
           - {cpu: x86_64,    os: win64}
           - {cpu: i386,      os: win32}
