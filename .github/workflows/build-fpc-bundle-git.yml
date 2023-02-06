@@ -188,6 +188,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        cpu: [""]
+        os:  [""]
         opt: ["${{ inputs.fpc_opt }}"]
         necessary: [false]
         exclude:
