@@ -360,16 +360,48 @@ jobs:
           target_os:  linux
           opt: "${{ inputs.fpc_opt }}"
 
+      - name: riscv32-linux
+        if: always() && (inputs.git_branch == 'main')
+        uses: ./.github/actions/make-fpc-cross
+        with:
+          target_cpu: riscv32
+          target_os:  linux
+          opt: "${{ inputs.fpc_opt }}"
+
+      - name: riscv32-embedded
+        if: always() && (inputs.git_branch == 'main')
+        uses: ./.github/actions/make-fpc-cross
+        with:
+          target_cpu: riscv32
+          target_os:  embedded
+          opt: "${{ inputs.fpc_opt }}"
+
+      - name: riscv32-freetos
+        if: always() && (inputs.git_branch == 'main')
+        uses: ./.github/actions/make-fpc-cross
+        with:
+          target_cpu: riscv32
+          target_os:  freetos
+          opt: "${{ inputs.fpc_opt }}"
+
       - name: riscv64-linux
-        if: always()
+        if: always() && (inputs.git_branch == 'main')
         uses: ./.github/actions/make-fpc-cross
         with:
           target_cpu: riscv64
           target_os:  linux
           opt: "${{ inputs.fpc_opt }}"
 
+      - name: riscv64-embedded
+        if: always() && (inputs.git_branch == 'main')
+        uses: ./.github/actions/make-fpc-cross
+        with:
+          target_cpu: riscv64
+          target_os:  embedded
+          opt: "${{ inputs.fpc_opt }}"
+
       - name: wasm32-embedded
-        if: always()
+        if: always() && (inputs.git_branch == 'main')
         uses: ./.github/actions/make-fpc-cross
         with:
           target_cpu: wasm32
@@ -377,7 +409,7 @@ jobs:
           opt: "BINUTILSPREFIX= OPT=\"-O-\" PP=fpc ${{ inputs.fpc_opt }}"
 
       - name: wasm32-wasi
-        if: always()
+        if: always() && (inputs.git_branch == 'main')
         uses: ./.github/actions/make-fpc-cross
         with:
           target_cpu: wasm32
