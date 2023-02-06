@@ -251,30 +251,30 @@ jobs:
         working-directory: "${{ github.workspace }}"
         run: ls -R
 
-      - name: "${{ matrux.cpu }}-${{ matrux.os }}$"
+      - name: "${{ matrix.cpu }}-${{ matrix.os }}$"
         uses: ./.github/actions/make-fpc-cross
         with:
-          target_cpu: ${{ matrux.cpu }}
-          target_os:  ${{ matrux.os }}
+          target_cpu: ${{ matrix.cpu }}
+          target_os:  ${{ matrix.os }}
           opt:        ${{ matrix.opt }}
-          crossopt:   ${{ matrux.crossopt }}
-          make_opt:   ${{ matrux.make_opt }}
+          crossopt:   ${{ matrix.crossopt }}
+          make_opt:   ${{ matrix.make_opt }}
 
       - name: Tar the cross bundle
         working-directory: "${{ github.workspace }}"
-        run: tar -czvf "bundle-${{ runner.os }}-cross-${{ matrux.cpu }}-${{ matrux.os }}.tar.gz" bundle-cross/*
+        run: tar -czvf "bundle-${{ runner.os }}-cross-${{ matrix.cpu }}-${{ matrix.os }}.tar.gz" bundle-cross/*
 
       - name: Upload the cross bundle
         uses: actions/upload-artifact@v3
         with:
-          name: "${{ inputs.bundle_name }}-cross-${{ matrux.cpu }}-${{ matrux.os }}.tar.gz"
-          path: "${{ github.workspace }}/bundle-${{ runner.os }}-cross-${{ matrux.cpu }}-${{ matrux.os }}.tar.gz"
+          name: "${{ inputs.bundle_name }}-cross-${{ matrix.cpu }}-${{ matrix.os }}.tar.gz"
+          path: "${{ github.workspace }}/bundle-${{ runner.os }}-cross-${{ matrix.cpu }}-${{ matrix.os }}.tar.gz"
 
       - name: Upload the cross bundle to release
         uses: svenstaro/upload-release-action@v2
         with:
-          asset_name: "fpc-bundle-${{ runner.os }}-cross-${{ matrux.cpu }}-${{ matrux.os }}.tar.gz"
-          file: "${{ github.workspace }}/bundle-${{ runner.os }}-cross-${{ matrux.cpu }}-${{ matrux.os }}.tar.gz"
+          asset_name: "fpc-bundle-${{ runner.os }}-cross-${{ matrix.cpu }}-${{ matrix.os }}.tar.gz"
+          file: "${{ github.workspace }}/bundle-${{ runner.os }}-cross-${{ matrix.cpu }}-${{ matrix.os }}.tar.gz"
           file_glob: true
 
   Build-Bundle-Cross:
