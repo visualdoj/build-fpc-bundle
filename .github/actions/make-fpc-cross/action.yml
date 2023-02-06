@@ -62,6 +62,37 @@ runs:
       run: |
            sudo apt-get install -y alien libncurses5-dev libxpm4 libgtk2.0-dev
 
+    - if: always() && (runner.os == 'Linux') && (inputs.target_cpu == 'i386')
+      shell: bash
+      run: |
+           sudo apt-get install -y "crossbuild-essential-i386"
+
+    - if: always() && (runner.os == 'Linux') && (inputs.target_cpu == 'arm')
+      shell: bash
+      run: |
+           sudo apt-get install -y "crossbuild-essential-armel"
+           sudo apt-get install -y "crossbuild-essential-armhf"
+
+    - if: always() && (runner.os == 'Linux') && (inputs.target_cpu == 'arm64')
+      shell: bash
+      run: |
+           sudo apt-get install -y "crossbuild-essential-arm64"
+
+    - if: always() && (runner.os == 'Linux') && (inputs.target_cpu == 'powerpc64')
+      shell: bash
+      run: |
+           sudo apt-get install -y "crossbuild-essential-ppc64el"
+
+    - if: always() && (runner.os == 'Linux') && (inputs.target_cpu == 'x86_64')
+      shell: bash
+      run: |
+           sudo apt-get install -y "crossbuild-essential-amd64"
+
+    - if: always() && (runner.os == 'Linux') && (inputs.target_cpu == 's390x')
+      shell: bash
+      run: |
+           sudo apt-get install -y "crossbuild-essential-s390x"
+
     - if: always() && (runner.os == 'Windows') && (inputs.target_cpu == 'arm') && (inputs.target_os == 'android')
       id: setup-ndk
       uses: nttld/setup-ndk@v1
