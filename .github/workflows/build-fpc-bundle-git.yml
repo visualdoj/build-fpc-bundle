@@ -220,9 +220,6 @@ jobs:
             ls -la ${{ github.workspace }}/src/cross/*
             ls -la ${{ github.workspace }}/fpc/installed/bin/*
 
-      - name: Print FPC version
-        run: fpc -i
-
       - name: Create cross bundle
         working-directory: "${{ github.workspace }}"
         run: |
