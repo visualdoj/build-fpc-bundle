@@ -535,7 +535,7 @@ jobs:
 #             file_glob: true
 
   Aggregate-Cross:
-    name: "Prepare aggregated cross bundle"
+    name: "Aggregate"
     needs: Build-Cross
     if: inputs.cross_compilers != ''
     runs-on: ${{ inputs.os }}
