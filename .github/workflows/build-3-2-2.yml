@@ -1,0 +1,34 @@
+name: Build FPC 3.2.2
+
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Release name (if required)'
+        required: false
+        default: ''
+
+jobs:
+  Windows:
+    uses: ./.github/workflows/build-fpc-bundle-git.yml
+    with:
+      os: windows-latest
+      git_branch: release_3_2_0
+      bundle_name: fpc-3.2.2-Windows
+    secrets: inherit
+  Linux:
+    uses: ./.github/workflows/build-fpc-bundle-git.yml
+    with:
+      os: ubuntu-latest
+      git_branch: release_3_2_0
+      bundle_name: fpc-3.2.2-Linux
+    secrets: inherit
+  macOS:
+    uses: ./.github/workflows/build-fpc-bundle-git.yml
+    with:
+      os: macos-latest
+      git_branch: release_3_2_0
+      bundle_name: fpc-3.2.2-macOS
+      fpc_opt: "-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
+      fpc_version: 3.3.1
+    secrets: inherit
