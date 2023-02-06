@@ -321,7 +321,7 @@ jobs:
       - name: Untar the bundle
         working-directory: "${{ github.workspace }}"
         run: |
-            tar zxvf "bundle-${{ runner.os }}.tar.gz"
+            tar zxvf "${{ inputs.bundle_name }}.tar.gz"
             mv bundle fpc
 
       - name: Add FPC to PATH (non-windows)
@@ -357,7 +357,7 @@ jobs:
 
       - name: Tar the cross bundle
         working-directory: "${{ github.workspace }}"
-        run: tar -czvf "bundle-${{ runner.os }}-cross-${{ matrix.cpu }}-${{ matrix.os }}.tar.gz" bundle-cross/*
+        run: tar -czvf "${{ inputs.bundle_name }}-cross-${{ matrix.cpu }}-${{ matrix.os }}.tar.gz" bundle-cross/*
 
       - name: Upload the cross bundle
         uses: actions/upload-artifact@v3

@@ -9,28 +9,28 @@ jobs:
     with:
       os: windows-latest
       git_branch: fixes_3_2
-      bundle_name: fpc-3.2.3.x86_64-windows
+      bundle_name: fpc-3.2.3-Windows
     secrets: inherit
   Build-Linux-3_2:
     uses: ./.github/workflows/build-fpc-bundle-git.yml
     with:
       os: ubuntu-latest
       git_branch: fixes_3_2
-      bundle_name: fpc-3.2.3.x86_64-linux
+      bundle_name: fpc-3.2.3-Linux
     secrets: inherit
   Build-Windows-main:
     uses: ./.github/workflows/build-fpc-bundle-git.yml
     with:
       os: windows-latest
       git_branch: main
-      bundle_name: fpc-main.x86_64-windows
+      bundle_name: fpc-main-Windows
     secrets: inherit
   Build-macOS-main:
     uses: ./.github/workflows/build-fpc-bundle-git.yml
     with:
       os: macos-latest
       git_branch: main
-      bundle_name: fpc-3.3.1.x86_64-macos
+      bundle_name: fpc-3.3.1-macOS
       fpc_opt: "-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
       fpc_version: 3.3.1
     secrets: inherit
