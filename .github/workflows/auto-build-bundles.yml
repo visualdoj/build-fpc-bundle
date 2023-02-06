@@ -9,14 +9,14 @@ jobs:
     with:
       os: windows-latest
       git_branch: fixes_3_2
-      bundle_name: fpc-fixes_3_2.x86_64-windows
+      bundle_name: fpc-3.2.3.x86_64-windows
     secrets: inherit
   Build-Linux-3_2:
     uses: ./.github/workflows/build-fpc-bundle-git.yml
     with:
       os: ubuntu-latest
       git_branch: fixes_3_2
-      bundle_name: fpc-fixes_3_2.x86_64-linux
+      bundle_name: fpc-3.2.3.x86_64-linux
     secrets: inherit
   Build-Windows-main:
     uses: ./.github/workflows/build-fpc-bundle-git.yml
@@ -30,7 +30,7 @@ jobs:
     with:
       os: macos-latest
       git_branch: main
-      bundle_name: fpc-fixes_3_2.x86_64-macos
+      bundle_name: fpc-3.3.1.x86_64-macos
       fpc_opt: "-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
       fpc_version: 3.3.1
     secrets: inherit
@@ -40,4 +40,4 @@ jobs:
     needs: [Build-Windows-3_2, Build-Linux-3_2, Build-Windows-main, Build-macOS-main]
     runs-on: ubuntu-latest
     steps:
-      - run: echo "# 🎉 Auto builds have been finished!" >>$GITHUB_STEP_SUMMARY
+      - run: echo "# 🎉 Auto builds have been finished! 🎉" >>$GITHUB_STEP_SUMMARY
