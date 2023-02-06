@@ -533,3 +533,14 @@ jobs:
           asset_name: "fpc-bundle-${{ runner.os }}-cross.tar.gz"
           file: "${{ github.workspace }}/bundle-${{ runner.os }}-cross.tar.gz"
           file_glob: true
+
+  Aggregate-Cross:
+    name: "Prepare aggregated cross bundle"
+    needs: Build-Cross
+    if: inputs.cross_compilers != ''
+    runs-on: ${{ inputs.os }}
+
+    steps:
+      - uses: actions/download-artifact@v3
+
+      - run: ls -R
