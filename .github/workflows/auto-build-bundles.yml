@@ -38,6 +38,6 @@ jobs:
   Final:
     if: always()
     needs: [Build-Windows-3_2, Build-Linux-3_2, Build-Windows-main, Build-macOS-main]
-    runs-on: ubuntu-laytest
+    runs-on: ubuntu-latest
     steps:
       - run: echo "# 🎉 Auto builds have been finished!" >>$GITHUB_STEP_SUMMARY
