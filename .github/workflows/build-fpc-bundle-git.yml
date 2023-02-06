@@ -179,8 +179,106 @@ jobs:
           file: "${{ github.workspace }}/bundle-${{ runner.os }}.tar.gz"
           file_glob: true
 
+  Build-Cross:
+    name: "Build FPC cross compiler"
+    needs: Build-Bundle
+    if: inputs.cross_compilers != ''
+    runs-on: ${{ inputs.os }}
+    continue-on-error: true # ${{ !matrix.necessary }}
+    strategy:
+      matrix:
+        necessary: [false]
+        opt: ["${{ inputs.fpc_opt }}"]
+        include:
+          - {cpu: x86_64,    os: win64}
+          - {cpu: i386,      os: win32}
+          - {cpu: arm,       os: android,  crossopt: "-Cparmv7a -Cfvfpv3"}
+          - {cpu: i386,      os: linux}
+          - {cpu: x86_64,    os: linux}
+          - {cpu: arm,       os: linux,    opt: "-dFPC_ARMEL ${{ inputs.fpc_opt }}"}
+          - {cpu: aarch64,   os: linux}
+          - {cpu: avr,       os: embedded, make_opt: SUBARCH=avr35}
+          - {cpu: m68k,      os: atari,    crossopt: -Cp68000}
+          - {cpu: powerpc,   os: linux}
+          - {cpu: powerpc64, os: linux}
+          - {cpu: sparc,     os: linux}
+          - {cpu: sparc64,   os: linux}
+          - {cpu: mips,      os: linux}
+          - {cpu: mipsel,    os: linux}
+          - {cpu: riscv32,   os: linux}
+          - {cpu: riscv32,   os: embedded}
+          - {cpu: riscv32,   os: freetos}
+          - {cpu: riscv64,   os: linux}
+          - {cpu: riscv64,   os: embedded}
+          - {cpu: wasm32,    os: embedded, opt: "BINUTILSPREFIX= OPT=\"-O-\" PP=fpc ${{ inputs.fpc_opt }}"}
+          - {cpu: wasm32,    os: wasi,     opt: "BINUTILSPREFIX= OPT=\"-O-\" PP=fpc ${{ inputs.fpc_opt }}"}
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v3
+
+      - name: Download FPC bundle
+        uses: actions/download-artifact@v3
+        id: download
+        with:
+            name: "${{ inputs.bundle_name }}.tar.gz"
+            path: "${{ github.workspace }}"
+
+      - name: Untar the bundle
+        working-directory: "${{ github.workspace }}"
+        run: |
+            tar zxvf "bundle-${{ runner.os }}.tar.gz"
+            mv bundle fpc
+
+      - name: Add FPC to PATH (non-windows)
+        if: runner.os != 'Windows'
+        run: |
+            echo  "${{ github.workspace }}/fpc/installed/bin" >> $GITHUB_PATH
+            echo  "${{ github.workspace }}/fpc/installed/lib/fpc/${{ inputs.fpc_version }}" >> $GITHUB_PATH
+
+      - name: Copy cross tools
+        if: runner.os != 'Windows'
+        run: |
+            cp -r ${{ github.workspace }}/src/cross/* ${{ github.workspace }}/fpc/installed/bin/
+
+      - name: Create cross bundle
+        working-directory: "${{ github.workspace }}"
+        run: |
+            mkdir bundle-cross
+            cp -r fpc/* bundle-cross/
+
+      - name: List files
+        working-directory: "${{ github.workspace }}"
+        run: ls -R
+
+      - name: "${{ matrux.cpu }}-${{ matrux.os }}$"
+        uses: ./.github/actions/make-fpc-cross
+        with:
+          target_cpu: ${{ matrux.cpu }}
+          target_os:  ${{ matrux.os }}
+          opt:        ${{ matrix.opt }}
+          crossopt:   ${{ matrux.crossopt }}
+          make_opt:   ${{ matrux.make_opt }}
+
+      - name: Tar the cross bundle
+        working-directory: "${{ github.workspace }}"
+        run: tar -czvf "bundle-${{ runner.os }}-cross-${{ matrux.cpu }}-${{ matrux.os }}.tar.gz" bundle-cross/*
+
+      - name: Upload the cross bundle
+        uses: actions/upload-artifact@v3
+        with:
+          name: "${{ inputs.bundle_name }}-cross-${{ matrux.cpu }}-${{ matrux.os }}.tar.gz"
+          path: "${{ github.workspace }}/bundle-${{ runner.os }}-cross-${{ matrux.cpu }}-${{ matrux.os }}.tar.gz"
+
+      - name: Upload the cross bundle to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          asset_name: "fpc-bundle-${{ runner.os }}-cross-${{ matrux.cpu }}-${{ matrux.os }}.tar.gz"
+          file: "${{ github.workspace }}/bundle-${{ runner.os }}-cross-${{ matrux.cpu }}-${{ matrux.os }}.tar.gz"
+          file_glob: true
+
   Build-Bundle-Cross:
-    name: "Build FPC cross compilers"
+    name: "Build FPC bundle of cross compilers"
     needs: Build-Bundle
     if: inputs.cross_compilers != ''
     runs-on: ${{ inputs.os }}
@@ -229,12 +327,6 @@ jobs:
       - name: List files
         working-directory: "${{ github.workspace }}"
         run: ls -R
-
-      - name: Setup fpc binaries PATH (Windows)
-        if: runner.os == 'Windows'
-        run: |
-            echo "${{ github.workspace }}\\fpc-binaries\\i386-win32" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-            make --version
 
       - run: echo "Built crosscompilers:" >>$GITHUB_STEP_SUMMARY
 
