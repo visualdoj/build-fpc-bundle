@@ -79,7 +79,7 @@ on:
 
 jobs:
   Build-Bundle:
-    name: "Build FPC for ${{ inputs.os }} from ${{ inputs.git_url }}"
+    name: "Host ${{ inputs.os }}"
     runs-on: ${{ inputs.os }}
     steps:
       - name: Check out
@@ -180,15 +180,19 @@ jobs:
           file_glob: true
 
   Build-Cross:
-    name: "Build FPC cross compiler"
+    name: "Cross"
     needs: Build-Bundle
     if: inputs.cross_compilers != ''
     runs-on: ${{ inputs.os }}
     continue-on-error: true # ${{ !matrix.necessary }}
     strategy:
       matrix:
-        necessary: [false]
+        cpu: [""]
+        os: [""]
         opt: ["${{ inputs.fpc_opt }}"]
+        crossopt: [""]
+        make_opt: [""]
+        necessary: [false]
         include:
           - {cpu: x86_64,    os: win64}
           - {cpu: i386,      os: win32}
@@ -251,7 +255,7 @@ jobs:
         working-directory: "${{ github.workspace }}"
         run: ls -R
 
-      - name: "${{ matrix.cpu }}-${{ matrix.os }}$"
+      - name: "${{ matrix.cpu }}-${{ matrix.os }}"
         uses: ./.github/actions/make-fpc-cross
         with:
           target_cpu: ${{ matrix.cpu }}
