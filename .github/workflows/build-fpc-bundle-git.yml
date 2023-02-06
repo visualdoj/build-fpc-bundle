@@ -303,11 +303,11 @@ jobs:
           target_os:  embedded
           opt: "SUBARCH=avr35 ${{ inputs.fpc_opt }}"
 
-      - name: m86k-atari
+      - name: m68k-atari
         if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
-          target_cpu: m86k
+          target_cpu: m68k
           target_os:  atari
           opt: "${{ inputs.fpc_opt }}"
 
