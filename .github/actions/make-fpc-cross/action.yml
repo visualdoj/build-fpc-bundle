@@ -9,6 +9,9 @@ inputs:
   opt:
     required: false
     default: ""
+  make_opt:
+    required: false
+    default: ""
   prefix:
     required: false
     default: "${{ github.workspace }}/bundle-cross/installed"
@@ -80,7 +83,7 @@ runs:
       working-directory: "${{ inputs.sources_dir }}"
       shell: bash
       run: |
-           "${{ inputs.fpc_bin }}\make.exe" clean all crossinstall CPU_TARGET=${{ inputs.target_cpu }} OS_TARGET=${{ inputs.target_os }} PREFIX="${{ inputs.prefix }}" CROSSOPT="${{ inputs.crossopt }}" OPT="${{ inputs.opt }}" PATH="${{ steps.windows_path.outputs.path }}"
+           "${{ inputs.fpc_bin }}\make.exe" clean all crossinstall CPU_TARGET=${{ inputs.target_cpu }} OS_TARGET=${{ inputs.target_os }} PREFIX="${{ inputs.prefix }}" CROSSOPT="${{ inputs.crossopt }}" OPT="${{ inputs.opt }}" PATH="${{ steps.windows_path.outputs.path }}" ${{ inputs.make_opt }}
            echo "${{ inputs.target_cpu }}-${{ inputs.target_os }}" >>"${{ github.workspace }}\bundle-cross\info\cross-list.txt"
            echo "* ${{ inputs.target_cpu }}-${{ inputs.target_os }}" >>$GITHUB_STEP_SUMMARY
 
