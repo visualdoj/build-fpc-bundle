@@ -11,7 +11,7 @@ jobs:
       git_branch: fixes_3_2
       bundle_name: fpc-fixes_3_2.x86_64-linux
     secrets: inherit
-  Run-Build-Windows-3.2:
+  Run-Build-Windows-3_2:
     uses: ./.github/workflows/build-fpc-bundle-git.yml
     with:
       os: windows-latest
