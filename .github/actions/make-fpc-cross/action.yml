@@ -81,13 +81,14 @@ runs:
       id: windows_path
       shell: bash
       run: |
-          echo %PATH%
-          cat "${{ github.workspace }}\\PATH.txt"
-          where pwd
-          where make
-          where fpc
-          cat "${{ github.workspace }}\\PATH.txt"
+          echo "::group::Set PATH"
           echo "path=$(cat PATH.txt)" >>$GITHUB_OUTPUT
+          cat PATH.txt
+          echo "::endgroup"
+          echo "::group::Echo GITHUB_OUTPUT"
+          echo $GITHUB_OUTPUT
+          cat  $GITHUB_OUTPUT
+          echo "::endgroup"
 
     - if: always() && (runner.os == 'Windows')
       working-directory: "${{ inputs.sources_dir }}"
