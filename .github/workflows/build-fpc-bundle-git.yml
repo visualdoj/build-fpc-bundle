@@ -311,6 +311,7 @@ jobs:
           target_cpu: m68k
           target_os:  atari
           opt: "${{ inputs.fpc_opt }}"
+          crossopt: -Cp68000
 
       - name: powerpc-linux
         if: always()
