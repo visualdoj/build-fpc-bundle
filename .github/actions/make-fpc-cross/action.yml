@@ -81,21 +81,14 @@ runs:
       id: windows_path
       shell: bash
       run: |
-          echo "::group::Set PATH"
           echo "path=$(cat PATH.txt)" >>$GITHUB_OUTPUT
-          cat PATH.txt
-          echo "::endgroup"
-          echo "::group::Echo GITHUB_OUTPUT"
-          echo $GITHUB_OUTPUT
-          cat  $GITHUB_OUTPUT
-          echo "::endgroup"
 
     - if: always() && (runner.os == 'Windows')
       working-directory: "${{ inputs.sources_dir }}"
       shell: bash
       run: |
-           "${{ inputs.fpc_bin }}\\make.exe" clean all crossinstall OS_TARGET=${{ inputs.target_os }} CPU_TARGET=${{ inputs.target_cpu }} PREFIX="${{ inputs.prefix }}" CROSSOPT="${{ inputs.crossopt }}" OPT="${{ inputs.opt }}" PATH="${{ steps.windows_path.outputs.path }}"
-           echo "${{ inputs.target_os }}-${{ inputs.target_cpu }}" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
+           "${{ inputs.fpc_bin }}\make.exe" clean all crossinstall OS_TARGET=${{ inputs.target_os }} CPU_TARGET=${{ inputs.target_cpu }} PREFIX="${{ inputs.prefix }}" CROSSOPT="${{ inputs.crossopt }}" OPT="${{ inputs.opt }}" PATH="${{ steps.windows_path.outputs.path }}"
+           echo "${{ inputs.target_os }}-${{ inputs.target_cpu }}" >>"${{ github.workspace }}\bundle-cross\info\cross-list.txt"
            echo "* ${{ inputs.target_os }}-${{ inputs.target_cpu }}" >>$GITHUB_STEP_SUMMARY
 
     - if: always() && (runner.os != 'Windows')
