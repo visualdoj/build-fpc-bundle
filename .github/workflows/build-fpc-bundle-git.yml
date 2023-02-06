@@ -236,28 +236,30 @@ jobs:
             echo "${{ github.workspace }}\\fpc-binaries\\i386-win32" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
             make --version
 
+      - run: echo "Built crosscompilers:" >>$GITHUB_STEP_SUMMARY
+
       - name: x86_64-win64
         if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
-          target_os:  win64
           target_cpu: x86_64
+          target_os:  win64
           opt: "${{ inputs.fpc_opt }}"
 
       - name: i386-win32
         if: always() && (runner.os != 'Windows')
         uses: ./.github/actions/make-fpc-cross
         with:
-          target_os:  win32
           target_cpu: i386
+          target_os:  win32
           opt: "${{ inputs.fpc_opt }}"
 
       - name: arm-android
         if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
-          target_os:  android
           target_cpu: arm
+          target_os:  android
           crossopt: "-Cparmv7a -Cfvfpv3"
           opt: "${{ inputs.fpc_opt }}"
 
@@ -265,120 +267,120 @@ jobs:
         if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
-          target_os:  linux
           target_cpu: i386
+          target_os:  linux
           opt: "${{ inputs.fpc_opt }}"
 
       - name: x86_64-linux
         if: always() && (runner.os != 'Linux')
         uses: ./.github/actions/make-fpc-cross
         with:
-          target_os:  linux
           target_cpu: x86_64
+          target_os:  linux
           opt: "${{ inputs.fpc_opt }}"
 
       - name: arm-linux
         if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
-          target_os:  linux
           target_cpu: arm
+          target_os:  linux
           opt: "-dFPC_ARMEL ${{ inputs.fpc_opt }}"
 
       - name: aarch64-linux
         if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
-          target_os:  linux
           target_cpu: aarch64
+          target_os:  linux
           opt: "${{ inputs.fpc_opt }}"
 
       - name: avr-embedded
         if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
-          target_os:  embedded
           target_cpu: avr
+          target_os:  embedded
           opt: "SUBARCH=avr35 ${{ inputs.fpc_opt }}"
 
       - name: m86k-atari
         if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
-          target_os:  atari
           target_cpu: m86k
+          target_os:  atari
           opt: "${{ inputs.fpc_opt }}"
 
       - name: powerpc-linux
         if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
-          target_os:  linux
           target_cpu: powerpc
+          target_os:  linux
           opt: "${{ inputs.fpc_opt }}"
 
       - name: powerpc64-linux
         if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
-          target_os:  linux
           target_cpu: powerpc64
+          target_os:  linux
           opt: "${{ inputs.fpc_opt }}"
 
       - name: sparc-linux
         if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
-          target_os:  linux
           target_cpu: sparc
+          target_os:  linux
           opt: "${{ inputs.fpc_opt }}"
 
       - name: sparc64-linux
         if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
-          target_os:  linux
           target_cpu: sparc64
+          target_os:  linux
           opt: "${{ inputs.fpc_opt }}"
 
       - name: mips-linux
         if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
-          target_os:  linux
           target_cpu: mips
+          target_os:  linux
           opt: "${{ inputs.fpc_opt }}"
 
       - name: mipsel-linux
         if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
-          target_os:  linux
           target_cpu: mipsel
+          target_os:  linux
           opt: "${{ inputs.fpc_opt }}"
 
       - name: riscv64-linux
         if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
-          target_os:  linux
           target_cpu: riscv64
+          target_os:  linux
           opt: "${{ inputs.fpc_opt }}"
 
       - name: wasm32-embedded
         if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
-          target_os:  embedded
           target_cpu: wasm32
+          target_os:  embedded
           opt: "BINUTILSPREFIX= OPT=\"-O-\" PP=fpc ${{ inputs.fpc_opt }}"
 
       - name: wasm32-wasi
         if: always()
         uses: ./.github/actions/make-fpc-cross
         with:
-          target_os:  wasi
           target_cpu: wasm32
+          target_os:  wasi
           opt: "BINUTILSPREFIX= OPT=\"-O-\" PP=fpc ${{ inputs.fpc_opt }}"
 
       - name: Tar the cross bundle

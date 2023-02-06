@@ -2,9 +2,9 @@ name: "Make cross FPC"
 author: "Doj"
 
 inputs:
-  target_os:
-    required: true
   target_cpu:
+    required: true
+  target_os:
     required: true
   opt:
     required: false
@@ -54,18 +54,18 @@ runs:
            ln -sf /opt/local/bin/wasm-ld-mp-11 "${{ github.workspace }}/tempbin/wasm32-wasi-wasm-ld"
            ln -sf /opt/local/bin/wasm-ld-mp-11 "${{ github.workspace }}/tempbin/wasm32-embedded-wasm-ld"
 
-    - if: always() && (runner.os == 'Linux') && (inputs.target_os == 'linux') && (inputs.target_cpu == 'arm')
+    - if: always() && (runner.os == 'Linux') && (inputs.target_cpu == 'arm') && (inputs.target_os == 'linux')
       shell: bash
       run: |
            sudo apt-get install -y alien libncurses5-dev libxpm4 libgtk2.0-dev
 
-    - if: always() && (runner.os == 'Windows') && (inputs.target_os == 'android') && (inputs.target_cpu == 'arm')
+    - if: always() && (runner.os == 'Windows') && (inputs.target_cpu == 'arm') && (inputs.target_os == 'android')
       id: setup-ndk
       uses: nttld/setup-ndk@v1
       with:
           ndk-version: r25b
 
-    - if: always() && (runner.os == 'Windows') && (inputs.target_os == 'android') && (inputs.target_cpu == 'arm')
+    - if: always() && (runner.os == 'Windows') && (inputs.target_cpu == 'arm') && (inputs.target_os == 'android')
       shell: bash
       run: |
           echo -n ";${{ steps.setup-ndk.outputs.ndk-path }}" >>PATH.txt
@@ -80,24 +80,24 @@ runs:
       working-directory: "${{ inputs.sources_dir }}"
       shell: bash
       run: |
-           "${{ inputs.fpc_bin }}\make.exe" clean all crossinstall OS_TARGET=${{ inputs.target_os }} CPU_TARGET=${{ inputs.target_cpu }} PREFIX="${{ inputs.prefix }}" CROSSOPT="${{ inputs.crossopt }}" OPT="${{ inputs.opt }}" PATH="${{ steps.windows_path.outputs.path }}"
-           echo "${{ inputs.target_os }}-${{ inputs.target_cpu }}" >>"${{ github.workspace }}\bundle-cross\info\cross-list.txt"
-           echo "* ${{ inputs.target_os }}-${{ inputs.target_cpu }}" >>$GITHUB_STEP_SUMMARY
+           "${{ inputs.fpc_bin }}\make.exe" clean all crossinstall CPU_TARGET=${{ inputs.target_cpu }} OS_TARGET=${{ inputs.target_os }} PREFIX="${{ inputs.prefix }}" CROSSOPT="${{ inputs.crossopt }}" OPT="${{ inputs.opt }}" PATH="${{ steps.windows_path.outputs.path }}"
+           echo "${{ inputs.target_cpu }}-${{ inputs.target_os }}" >>"${{ github.workspace }}\bundle-cross\info\cross-list.txt"
+           echo "* ${{ inputs.target_cpu }}-${{ inputs.target_os }}" >>$GITHUB_STEP_SUMMARY
 
     - if: always() && (runner.os != 'Windows')
       working-directory: "${{ inputs.sources_dir }}"
       shell: bash
       run: |
-           make clean all crossinstall OS_TARGET=${{ inputs.target_os }} CPU_TARGET=${{ inputs.target_cpu }} PREFIX="${{ inputs.prefix }}" CROSSOPT="${{ inputs.crossopt }}" OPT="${{ inputs.opt }}"
-           echo "${{ inputs.target_os }}-${{ inputs.target_cpu }}" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
-           echo "* ${{ inputs.target_os }}-${{ inputs.target_cpu }}" >>$GITHUB_STEP_SUMMARY
+           make clean all crossinstall CPU_TARGET=${{ inputs.target_cpu }} OS_TARGET=${{ inputs.target_os }} PREFIX="${{ inputs.prefix }}" CROSSOPT="${{ inputs.crossopt }}" OPT="${{ inputs.opt }}"
+           echo "${{ inputs.target_cpu }}-${{ inputs.target_os }}" >>"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
+           echo "* ${{ inputs.target_cpu }}-${{ inputs.target_os }}" >>$GITHUB_STEP_SUMMARY
 
     - shell: bash
       run: |
            echo >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
            echo "# ${{ inputs.target_cpu  }}-${{ inputs.target_os  }}" >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
-           echo "#IFDEF ${{ inputs.target_os  }}" >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
            echo "#IFDEF cpu${{ inputs.target_cpu }}" >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
+           echo "#IFDEF ${{ inputs.target_os  }}" >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
 
     - shell: bash
       run: |
