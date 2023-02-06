@@ -245,7 +245,7 @@ jobs:
           opt: "${{ inputs.fpc_opt }}"
 
       - name: i386-win32
-        if: always()
+        if: always() && (runner.os != 'Windows')
         uses: ./.github/actions/make-fpc-cross
         with:
           target_os:  win32
@@ -270,7 +270,7 @@ jobs:
           opt: "${{ inputs.fpc_opt }}"
 
       - name: x86_64-linux
-        if: always()
+        if: always() && (runner.os != 'Linux')
         uses: ./.github/actions/make-fpc-cross
         with:
           target_os:  linux
