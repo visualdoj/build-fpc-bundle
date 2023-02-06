@@ -185,8 +185,8 @@ jobs:
     if: inputs.cross_compilers != ''
     runs-on: ${{ inputs.os }}
     continue-on-error: true # ${{ !matrix.necessary }}
-    fail-fast: false
     strategy:
+      fail-fast: false
       matrix:
         opt: ["${{ inputs.fpc_opt }}"]
         necessary: [false]
