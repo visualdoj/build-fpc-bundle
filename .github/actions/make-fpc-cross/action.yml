@@ -68,7 +68,7 @@ runs:
     - if: always() && (runner.os == 'Windows') && (inputs.target_cpu == 'arm') && (inputs.target_os == 'android')
       shell: bash
       run: |
-          echo -n ";${{ steps.setup-ndk.outputs.ndk-path }}" >>PATH.txt
+          echo -n ";${{ steps.setup-ndk.outputs.ndk-path }}\toolchains\llvm\prebuilt\windows-x86_64\bin" >>PATH.txt
           ls -R "${{ steps.setup-ndk.outputs.ndk-path }}"
 
     - if: always() && (runner.os == 'Windows')
