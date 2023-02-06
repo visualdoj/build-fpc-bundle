@@ -17,7 +17,7 @@ else
 endif
 
 ifneq ($(BUNDLE_NAME),)
-CROSS_ARTIFACTS:=$(wildcard $(CURDIR)/$(BUNDLE_NAME)-cross-*.tar.gz)
+CROSS_ARTIFACTS:=$(wildcard $(BUNDLE_NAME)-cross-*.tar.gz)
 CROSS_UNPACKED:=$(CROSS_ARTIFACTS:%.tar.gz=%-unpacked)
 CROSS_LISTS:=$(CROSS_ARTIFACTS:%.tar.gz=/info/cross-list.txt)
 CROSS_CFG:=$(CROSS_ARTIFACTS:%.tar.gz=/fpc.cfg)
