@@ -207,12 +207,6 @@ jobs:
         working-directory: "${{ github.workspace }}"
         run: git clone "https://gitlab.com/freepascal.org/fpc/binaries.git" fpc-binaries
 
-      - name: Add FPC to PATH (Windows)
-        if: runner.os == 'Windows'
-        run: |
-            Add-Content $env:GITHUB_PATH "${{ github.workspace }}\fpc\installed\bin\i386-win32"
-            ls "${{ github.workspace }}\fpc\installed\bin\i386-win32"
-
       - name: Add FPC to PATH (non-windows)
         if: runner.os != 'Windows'
         run: |
