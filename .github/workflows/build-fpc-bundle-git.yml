@@ -180,7 +180,7 @@ jobs:
           file_glob: true
 
   Prep:
-    name: "Prep"
+    name: Prep
     if: inputs.cross != ''
     runs-on: ${{ inputs.os }}
     outputs:
@@ -192,7 +192,7 @@ jobs:
 
   Build-Cross:
     name: "Cross"
-    needs: Build-Bundle, Prep
+    needs: [Build-Bundle, Prep]
     if: inputs.cross != ''
     runs-on: ${{ inputs.os }}
     continue-on-error: true
