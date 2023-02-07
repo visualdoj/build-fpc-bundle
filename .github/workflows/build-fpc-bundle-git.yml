@@ -347,13 +347,40 @@ jobs:
         run: ls -R
 
       - name: "${{ matrix.cpu }}-${{ matrix.os }}"
-        uses: ./.github/actions/make-fpc-cross
+        id: prerequisites
+        uses: ./.github/actions/setup-cross-prerequisites
         with:
           target_cpu: ${{ matrix.cpu }}
           target_os:  ${{ matrix.os }}
           opt:        ${{ matrix.opt }}
           crossopt:   ${{ matrix.crossopt }}
           make_opt:   ${{ matrix.make_opt }}
+
+      - if: always() && (runner.os == 'Windows')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        shell: bash
+        run: |
+             "${{ github.workspace }}\\fpc\\installed\\bin\\i386-win32\\make.exe" clean all crossinstall CPU_TARGET=${{ matrix.cpu }} OS_TARGET=${{ matrix.os }} PREFIX="${{ github.workspace }}\\bundle-cross\\installed" CROSSOPT="${{ matrix.crossopt }}" OPT="${{ matrix.opt }}" PATH="${{ steps.prerequisites.outputs.path }}" ${{ matrix.make_opt }}
+             echo "${{ matrix.cpu }}-${{ matrix.os }}" >"${{ github.workspace }}\bundle-cross\info\cross-list.txt"
+      
+      - if: always() && (runner.os != 'Windows')
+        working-directory: "${{ github.workspace }}/fpc/src"
+        shell: bash
+        run: |
+             make clean all crossinstall CPU_TARGET=${{ matrix.cpu }} OS_TARGET=${{ matrix.os }} PREFIX="${{ github.workspace }}/bundle-cross/installed" CROSSOPT="${{ matrix.crossopt }}" OPT="${{ matrix.opt }}"
+             echo "${{ matrix.cpu }}-${{ matrix.os }}" >"${{ github.workspace }}/bundle-cross/info/cross-list.txt"
+      
+      - shell: bash
+        run: |
+             echo >"${{ github.workspace }}/bundle-cross/fpc.cfg"
+             echo "# ${{ matrix.cpu  }}-${{ matrix.os  }}" >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
+             echo "#IFDEF cpu${{ matrix.cpu }}" >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
+             echo "#IFDEF ${{ matrix.os  }}" >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
+      
+      - shell: bash
+        run: |
+             echo "#ENDIF" >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
+             echo "#ENDIF" >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
 
       - name: Tar the cross bundle
         working-directory: "${{ github.workspace }}"
