@@ -13,7 +13,7 @@ jobs:
       os: windows-latest
       git_branch: fixes_3_2
       bundle_name: fpc-3.2.3-Windows
-      cross: supported
+      cross: ${{ github.event_name }}
     secrets: inherit
   Linux-3_2_3:
     uses: ./.github/workflows/build-fpc-bundle-git.yml
@@ -21,7 +21,7 @@ jobs:
       os: ubuntu-latest
       git_branch: fixes_3_2
       bundle_name: fpc-3.2.3-Linux
-      cross: supported
+      cross: ${{ github.event_name }}
     secrets: inherit
   macOS-3_2_3:
     uses: ./.github/workflows/build-fpc-bundle-git.yml
@@ -31,7 +31,7 @@ jobs:
       bundle_name: fpc-3.2.3-macOS
       fpc: system
       fpc_opt: "-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
-      cross: supported
+      cross: ${{ github.event_name }}
     secrets: inherit
   Windows-main:
     uses: ./.github/workflows/build-fpc-bundle-git.yml
@@ -40,7 +40,7 @@ jobs:
       git_branch: main
       bundle_name: fpc-3.3.1-Windows
       fpc_version: 3.3.1
-      cross: supported
+      cross: ${{ github.event_name }}
     secrets: inherit
   Linux-main:
     uses: ./.github/workflows/build-fpc-bundle-git.yml
@@ -49,7 +49,7 @@ jobs:
       git_branch: main
       bundle_name: fpc-3.3.1-Linux
       fpc_version: 3.3.1
-      cross: supported
+      cross: ${{ github.event_name }}
     secrets: inherit
   macOS-main:
     uses: ./.github/workflows/build-fpc-bundle-git.yml
@@ -59,7 +59,7 @@ jobs:
       bundle_name: fpc-3.3.1-macOS
       fpc: system
       fpc_opt: "-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
-      cross: supported
+      cross: ${{ github.event_name }}
     secrets: inherit
 
   Final:
