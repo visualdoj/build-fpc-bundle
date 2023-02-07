@@ -94,7 +94,7 @@ jobs:
             cat $GITHUB_OUTPUT
       - id:  generate-matrix2
         shell: bash
-        run:|
+        run: |
             echo "matrix2=$(cat matrix.json | awk '{print}' ORS='')" >>$GITHUB_OUTPUT
             cat $GITHUB_OUTPUT
 
