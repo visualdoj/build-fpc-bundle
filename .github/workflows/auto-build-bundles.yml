@@ -5,7 +5,7 @@ name: Auto Build All Bundles
 on: 
   push:
   schedule:
-    - cron: '* 0/6 * * *'
+    - cron: '0 0/6 * * *'
 jobs:
   Windows-3_2_3:
     uses: ./.github/workflows/build-fpc-bundle-git.yml
