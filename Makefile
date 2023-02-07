@@ -35,8 +35,8 @@ bundle-cross : $(CROSS_UNPACKED)
 	@$(ECHO) >$@/info/cross-list.txt
 	$(CAT) $(CROSS_LISTS) >>$@/info/cross-list.txt
 	$(CAT) $(CROSS_CFG)   >>$@/fpc.cfg
-	$(CP)  $(CROSS_BIN) $@/bin/
-	$(CP)  $(CROSS_PP)  $@/bin/
+	$(CP)  $(CROSS_BIN) $@/installed/bin/
+	$(CP)  $(CROSS_PP)  $@/installed/bin/
 $(BUNDLE_NAME)-%-unpacked : $(BUNDLE_NAME)-%.tar.gz config
 	$(TAR) -zxvf $</$<
 	$(MV) bundle-cross $@
