@@ -19,8 +19,8 @@ endif
 ifneq ($(BUNDLE_NAME),)
 CROSS_ARTIFACTS:=$(wildcard $(BUNDLE_NAME)-cross-*.tar.gz)
 CROSS_UNPACKED:=$(CROSS_ARTIFACTS:%.tar.gz=%-unpacked)
-CROSS_LISTS:=$(CROSS_ARTIFACTS:%.tar.gz=/info/cross-list.txt)
-CROSS_CFG:=$(CROSS_ARTIFACTS:%.tar.gz=/fpc.cfg)
+CROSS_LISTS   :=$(CROSS_ARTIFACTS:%.tar.gz=%-unpacked/info/cross-list.txt)
+CROSS_CFG     :=$(CROSS_ARTIFACTS:%.tar.gz=%-unpacked/fpc.cfg)
 
 aggregate : $(BUNDLE_NAME)-cross.tar.gz ;
 $(BUNDLE_NAME)-cross.tar.gz : bundle-cross
