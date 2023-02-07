@@ -84,11 +84,16 @@ jobs:
     runs-on: ${{ inputs.os }}
     outputs:
       matrix: ${{ steps.generate-matrix.outputs.matrix }}
+      matrix2: ${{ steps.generate-matrix2.outputs.matrix }}
     steps:
       - uses: actions/checkout@v3
       - id:  generate-matrix
         shell: bash
         run: echo "matrix=$(python src/generate-matrix.py --host ${{ runner.os }} --cross ${{ inputs.cross }} --matrix matrix.json)" >>$GITHUB_OUTPUT
+      - id:  generate-matrix2
+        shell: bash
+        run: echo "matrix2=$(cat matrix.json | awk '{print}' ORS='')" >>$GITHUB_OUTPUT
+      - run: cat $GITHUB_OUTPUT
 
   Build-Bundle:
     name: "Host"
