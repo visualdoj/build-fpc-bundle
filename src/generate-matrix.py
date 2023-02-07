@@ -65,7 +65,7 @@ def generate_matrix(host, cross, matrix_filename):
                 and include.get('os','') not in configs:
                     include_list.remove(include)
 
-    print(json.dumps(matrix))
+    print(json.dumps(matrix), end='')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
