@@ -1,4 +1,9 @@
 {
+    "cpu": [""],
+    "os":  [""],
+    "opt": [""],
+    "crossopt": [""],
+    "make_opt": [""],
     "exclude": [
         { "cpu": "" },
         { "os":  "" }
