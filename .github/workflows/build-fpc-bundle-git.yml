@@ -83,16 +83,16 @@ jobs:
     if: inputs.cross != ''
     runs-on: ${{ inputs.os }}
     outputs:
-      matrix: ${{ steps.generate-matrix.outputs.matrix }}
-      matrix_full: ${{ steps.generate-matrix_full.outputs.matrix }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      matrix_full: ${{ steps.matrix_full.outputs.matrix_full }}
     steps:
       - uses: actions/checkout@v3
-      - id:  generate-matrix
+      - id:  matrix
         shell: bash
         run: |
             echo "matrix=$(python src/generate-matrix.py --host ${{ runner.os }} --cross ${{ inputs.cross }} --matrix matrix.json)" >>$GITHUB_OUTPUT
             cat $GITHUB_OUTPUT
-      - id:  generate-matrix_full
+      - id:  matrix_full
         shell: bash
         run: |
             echo "matrix_full=$(cat matrix.json | awk '{print}' ORS='')" >>$GITHUB_OUTPUT
