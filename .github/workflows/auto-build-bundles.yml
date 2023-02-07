@@ -5,7 +5,7 @@ name: Auto Build All Bundles
 on: 
   push:
   schedule:
-    - cron: '* 6/1 * * *'
+    - cron: '* 0/6 * * *'
 jobs:
   Build-3_2_3:
     uses: ./.github/workflows/build-3-2-3.yml
