@@ -92,8 +92,9 @@ jobs:
             echo "matrix=$(python src/generate-matrix.py --host ${{ runner.os }} --cross ${{ inputs.cross }} --matrix matrix.json)" >>$GITHUB_OUTPUT
             cat $GITHUB_OUTPUT
 
-  Build-Bundle:
-    name: "Host"
+  Build-Host:
+    name: Host
+    needs: Init
     runs-on: ${{ inputs.os }}
     steps:
       - name: Check out
@@ -195,7 +196,7 @@ jobs:
 
   Build-Cross:
     name: "Cross"
-    needs: [Init]
+    needs: Build-Host
     if: inputs.cross != ''
     runs-on: ${{ inputs.os }}
     continue-on-error: true
