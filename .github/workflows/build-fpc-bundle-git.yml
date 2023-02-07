@@ -100,7 +100,6 @@ jobs:
 
   Build-Bundle:
     name: "Host"
-    needs: Init
     runs-on: ${{ inputs.os }}
     steps:
       - name: Check out
@@ -202,13 +201,13 @@ jobs:
 
   Build-Cross:
     name: "Cross"
-    needs: [Build-Bundle]
+    needs: [Init]
     if: inputs.cross != ''
     runs-on: ${{ inputs.os }}
     continue-on-error: true
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.Init.outputs.matrix) }}
+      matrix: ${{ fromJSON(needs.Init.outputs.matrix2) }}
 
     steps:
       - name: Check out
