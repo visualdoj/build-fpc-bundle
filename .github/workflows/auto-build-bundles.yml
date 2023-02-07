@@ -28,7 +28,7 @@ jobs:
     with:
       os: macos-latest
       git_branch: fixes_3_2
-      bundle_name: fpc-3.3.3-macOS
+      bundle_name: fpc-3.2.3-macOS
       fpc_opt: "-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
       cross: supported
     secrets: inherit
@@ -46,7 +46,7 @@ jobs:
     with:
       os: ubuntu-latest
       git_branch: main
-      bundle_name: fpc-3.2.3-Linux
+      bundle_name: fpc-3.3.1-Linux
       fpc_version: 3.3.1
       cross: supported
     secrets: inherit
