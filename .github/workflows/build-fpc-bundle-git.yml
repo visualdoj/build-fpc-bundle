@@ -199,7 +199,7 @@ jobs:
     continue-on-error: true
     strategy:
       fail-fast: false
-      matrix: fromJSON(needs.Prep.outputs.matrix)
+      matrix: ${{ fromJSON(needs.Prep.outputs.matrix) }}
 
     steps:
       - name: Check out
