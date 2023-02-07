@@ -2,11 +2,10 @@
     "cpu": [""],
     "os":  [""],
     "opt": [""],
-    "necessary": [false],
-    "exclude": {
-        "cpu": "",
-        "os":  ""
-    },
+    "exclude": [
+        { "cpu": "" },
+        { "os":  "" }
+    ],
     "include": [
         {"cpu": "i386",      "os": "linux"},
         {"cpu": "i386",      "os": "go32v2"},
