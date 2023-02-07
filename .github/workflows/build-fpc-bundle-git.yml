@@ -188,6 +188,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - id:  generate-matrix
+        shell: bash
         run: echo "matrix=$(cat matrix.json | awk '{print}' ORS='')" >>$GITHUB_OUTPUT
 
   Build-Cross:
