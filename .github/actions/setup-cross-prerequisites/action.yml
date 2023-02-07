@@ -25,9 +25,6 @@ inputs:
     required: false
     default: "${{ github.workspace }}\\fpc\\installed\\bin\\i386-win32"
 
-outputs:
-  path: ${{ steps.windows_path.outputs.path }}
-
 
 runs:
   using: "composite"
@@ -108,8 +105,3 @@ runs:
       run: |
           echo -n ";${{ steps.setup-ndk.outputs.ndk-path }}\toolchains\llvm\prebuilt\windows-x86_64\bin" >>PATH.txt
           ls -R "${{ steps.setup-ndk.outputs.ndk-path }}"
-
-    - if: always() && (runner.os == 'Windows')
-      id: windows_path
-      shell: bash
-      run: echo "path=$(cat PATH.txt)" >>$GITHUB_OUTPUT

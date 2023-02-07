@@ -357,10 +357,15 @@ jobs:
           make_opt:   ${{ matrix.make_opt }}
 
       - if: always() && (runner.os == 'Windows')
+        id: windows_path
+        shell: bash
+        run: echo "path=$(cat PATH.txt)" >>$GITHUB_OUTPUT
+
+      - if: always() && (runner.os == 'Windows')
         working-directory: "${{ github.workspace }}/fpc/src"
         shell: bash
         run: |
-             "${{ github.workspace }}\\fpc\\installed\\bin\\i386-win32\\make.exe" clean all crossinstall CPU_TARGET=${{ matrix.cpu }} OS_TARGET=${{ matrix.os }} PREFIX="${{ github.workspace }}\\bundle-cross\\installed" CROSSOPT="${{ matrix.crossopt }}" OPT="${{ matrix.opt }}" PATH="${{ steps.prerequisites.outputs.path }}" ${{ matrix.make_opt }}
+             "${{ github.workspace }}\\fpc\\installed\\bin\\i386-win32\\make.exe" clean all crossinstall CPU_TARGET=${{ matrix.cpu }} OS_TARGET=${{ matrix.os }} PREFIX="${{ github.workspace }}\\bundle-cross\\installed" CROSSOPT="${{ matrix.crossopt }}" OPT="${{ matrix.opt }}" PATH="${{ steps.windows_path.outputs.path }}" ${{ matrix.make_opt }}
              echo "${{ matrix.cpu }}-${{ matrix.os }}" >"${{ github.workspace }}\bundle-cross\info\cross-list.txt"
       
       - if: always() && (runner.os != 'Windows')
