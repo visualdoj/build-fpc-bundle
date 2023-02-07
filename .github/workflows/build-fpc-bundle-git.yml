@@ -97,10 +97,10 @@ jobs:
       - name: Workaround for missing PATH settings (choco)
         if: (runner.os == 'Windows') && (inputs.fpc == 'system')
         run: |
-          ls "C:\\tools\\freepascal"
-          ls "C:\\tools\\freepascal\\bin"
-          ls "C:\\tools\\freepascal\\bin\\i386-win32"
-          echo "C:\\tools\\freepascal\\bin\\i386-win32" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          ls "C:\tools\freepascal"
+          ls "C:\tools\freepascal\bin"
+          ls "C:\tools\freepascal\bin\i386-win32"
+          echo "C:\tools\freepascal\bin\i386-win32" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Install Free Pascal Compiler (brew)
         if: (runner.os == 'macOS') && (inputs.fpc == 'system')
@@ -149,7 +149,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-             "${{ github.workspace }}\\bundle\\installed\\bin\\i386-win32\\fpcmkcfg.exe" -d basepath='$FPC_INSTALLED_DIR$' -o "${{ github.workspace }}/bundle/fpc.cfg"
+             "${{ github.workspace }}\bundle\installed\bin\i386-win32\fpcmkcfg.exe" -d basepath='$FPC_INSTALLED_DIR$' -o "${{ github.workspace }}/bundle/fpc.cfg"
 
       - name: fpc.cfg (non-Windows)
         if: runner.os != 'Windows'
@@ -262,7 +262,7 @@ jobs:
         working-directory: "${{ github.workspace }}/fpc/src"
         shell: bash
         run: |
-             "${{ github.workspace }}\\fpc\\installed\\bin\\i386-win32\\make.exe" clean all crossinstall CPU_TARGET=${{ matrix.cpu }} OS_TARGET=${{ matrix.os }} PREFIX="${{ github.workspace }}\\bundle-cross\\installed" CROSSOPT="${{ matrix.crossopt }}" OPT="${{ matrix.opt }} ${{inputs.fpc_opt}}" PATH="${{ steps.windows_path.outputs.path }}" ${{ matrix.make_opt }}
+             "${{ github.workspace }}\fpc\installed\bin\i386-win32\make.exe" clean all crossinstall CPU_TARGET=${{ matrix.cpu }} OS_TARGET=${{ matrix.os }} PREFIX="${{ github.workspace }}\bundle-cross\installed" CROSSOPT="${{ matrix.crossopt }}" OPT="${{ matrix.opt }} ${{inputs.fpc_opt}}" PATH="${{ steps.windows_path.outputs.path }}" ${{ matrix.make_opt }}
              echo "${{ matrix.cpu }}-${{ matrix.os }}" >"${{ github.workspace }}\bundle-cross\info\cross-list.txt"
       
       - if: (success() || failure()) && (runner.os != 'Windows')
