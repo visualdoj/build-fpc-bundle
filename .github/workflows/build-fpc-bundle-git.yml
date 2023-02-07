@@ -88,13 +88,15 @@ jobs:
       - uses: actions/checkout@v3
       - id:  generate-matrix
         shell: bash
-        run: echo "matrix=$(python src/generate-matrix.py --host ${{ runner.os }} --cross ${{ inputs.cross }} --matrix matrix.json | awk '{print}' ORS='')" >>$GITHUB_OUTPUT
+        run: echo "matrix=$(python src/generate-matrix.py --host ${{ runner.os }} --cross ${{ inputs.cross }} --matrix matrix.json)" >>$GITHUB_OUTPUT
 
   Build-Bundle:
     name: "Host"
     needs: Init
     runs-on: ${{ inputs.os }}
     steps:
+      - run: echo "${{ needs.Init.outputs.matrix }}"
+
       - name: Check out
         uses: actions/checkout@v3
 
