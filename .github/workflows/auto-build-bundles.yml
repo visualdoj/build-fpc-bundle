@@ -56,7 +56,7 @@ jobs:
     secrets: inherit
 
   Final:
-    if: always()
+    if: (success() || failure())
     needs: [Windows-3_2_3, Linux-3_2_3, macOS-3_2_3, Windows-main, Linux-main, macOS-main]
     runs-on: ubuntu-latest
     steps:

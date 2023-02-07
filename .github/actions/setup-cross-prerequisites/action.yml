@@ -29,28 +29,28 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - if: always() && (runner.os == 'Windows')
+    - if: (success() || failure()) && (runner.os == 'Windows')
       shell: bash
       run: echo -n "${{ inputs.fpc_bin }};${{ inputs.fpc_bin }}" >PATH.txt
 
     #
     # https://wiki.freepascal.org/WebAssembly/Compiler
     #
-    - if: always() && (runner.os == 'Linux') && (inputs.target_cpu == 'wasm')
+    - if: (success() || failure()) && (runner.os == 'Linux') && (inputs.target_cpu == 'wasm')
       shell: bash
       run: |
            sudo apt-get install lld-12
            ln -sf /usr/lib/llvm-12/bin/wasm-ld "${{ github.workspace }}/tempbin/wasm32-wasi-wasm-ld"
            ln -sf /usr/lib/llvm-12/bin/wasm-ld "${{ github.workspace }}/tempbin/wasm32-embedded-wasm-ld"
 
-    - if: always() && (runner.os == 'Windows') && (inputs.target_os == 'wasm')
+    - if: (success() || failure()) && (runner.os == 'Windows') && (inputs.target_os == 'wasm')
       shell: bash
       run: |
            choco install llvm --params="'/InstallationPath:${{ github.workspace }}\llvm\'"
            mklink ${{ github.workspace }}/tempbin/wasm32-wasi-wasm-ld.exe     ${{ github.workspace }}/llvm/wasm-ld.exe
            mklink ${{ github.workspace }}/tempbin/wasm32-embedded-wasm-ld.exe ${{ github.workspace }}/llvm/wasm-ld.exe
 
-    - if: always() && (runner.os == 'macOS') && (inputs.target_cpu == 'wasm')
+    - if: (success() || failure()) && (runner.os == 'macOS') && (inputs.target_cpu == 'wasm')
       shell: bash
       run: |
            brew update
@@ -58,49 +58,49 @@ runs:
            ln -sf /opt/local/bin/wasm-ld-mp-11 "${{ github.workspace }}/tempbin/wasm32-wasi-wasm-ld"
            ln -sf /opt/local/bin/wasm-ld-mp-11 "${{ github.workspace }}/tempbin/wasm32-embedded-wasm-ld"
 
-    - if: always() && (runner.os == 'Linux') && (inputs.target_cpu == 'arm') && (inputs.target_os == 'linux')
+    - if: (success() || failure()) && (runner.os == 'Linux') && (inputs.target_cpu == 'arm') && (inputs.target_os == 'linux')
       shell: bash
       run: |
            sudo apt-get install -y alien libncurses5-dev libxpm4 libgtk2.0-dev
 
-    - if: always() && (runner.os == 'Linux') && (inputs.target_cpu == 'i386')
+    - if: (success() || failure()) && (runner.os == 'Linux') && (inputs.target_cpu == 'i386')
       shell: bash
       run: |
            sudo apt-get install -y "crossbuild-essential-i386"
 
-    - if: always() && (runner.os == 'Linux') && (inputs.target_cpu == 'arm')
+    - if: (success() || failure()) && (runner.os == 'Linux') && (inputs.target_cpu == 'arm')
       shell: bash
       run: |
            sudo apt-get install -y "crossbuild-essential-armel"
            sudo apt-get install -y "crossbuild-essential-armhf"
 
-    - if: always() && (runner.os == 'Linux') && (inputs.target_cpu == 'arm64')
+    - if: (success() || failure()) && (runner.os == 'Linux') && (inputs.target_cpu == 'arm64')
       shell: bash
       run: |
            sudo apt-get install -y "crossbuild-essential-arm64"
 
-    - if: always() && (runner.os == 'Linux') && (inputs.target_cpu == 'powerpc64')
+    - if: (success() || failure()) && (runner.os == 'Linux') && (inputs.target_cpu == 'powerpc64')
       shell: bash
       run: |
            sudo apt-get install -y "crossbuild-essential-ppc64el"
 
-    - if: always() && (runner.os == 'Linux') && (inputs.target_cpu == 'x86_64')
+    - if: (success() || failure()) && (runner.os == 'Linux') && (inputs.target_cpu == 'x86_64')
       shell: bash
       run: |
            sudo apt-get install -y "crossbuild-essential-amd64"
 
-    - if: always() && (runner.os == 'Linux') && (inputs.target_cpu == 's390x')
+    - if: (success() || failure()) && (runner.os == 'Linux') && (inputs.target_cpu == 's390x')
       shell: bash
       run: |
            sudo apt-get install -y "crossbuild-essential-s390x"
 
-    - if: always() && (runner.os == 'Windows') && (inputs.target_cpu == 'arm') && (inputs.target_os == 'android')
+    - if: (success() || failure()) && (runner.os == 'Windows') && (inputs.target_cpu == 'arm') && (inputs.target_os == 'android')
       id: setup-ndk
       uses: nttld/setup-ndk@v1
       with:
           ndk-version: r12b
 
-    - if: always() && (runner.os == 'Windows') && (inputs.target_cpu == 'arm') && (inputs.target_os == 'android')
+    - if: (success() || failure()) && (runner.os == 'Windows') && (inputs.target_cpu == 'arm') && (inputs.target_os == 'android')
       shell: bash
       run: |
           echo -n ";${{ steps.setup-ndk.outputs.ndk-path }}\toolchains\llvm\prebuilt\windows-x86_64\bin" >>PATH.txt

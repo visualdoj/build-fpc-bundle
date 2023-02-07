@@ -356,19 +356,19 @@ jobs:
           crossopt:   ${{ matrix.crossopt }}
           make_opt:   ${{ matrix.make_opt }}
 
-      - if: always() && (runner.os == 'Windows')
+      - if: (success() || failure()) && (runner.os == 'Windows')
         id: windows_path
         shell: bash
         run: echo "path=$(cat PATH.txt)" >>$GITHUB_OUTPUT
 
-      - if: always() && (runner.os == 'Windows')
+      - if: (success() || failure()) && (runner.os == 'Windows')
         working-directory: "${{ github.workspace }}/fpc/src"
         shell: bash
         run: |
              "${{ github.workspace }}\\fpc\\installed\\bin\\i386-win32\\make.exe" clean all crossinstall CPU_TARGET=${{ matrix.cpu }} OS_TARGET=${{ matrix.os }} PREFIX="${{ github.workspace }}\\bundle-cross\\installed" CROSSOPT="${{ matrix.crossopt }}" OPT="${{ matrix.opt }}" PATH="${{ steps.windows_path.outputs.path }}" ${{ matrix.make_opt }}
              echo "${{ matrix.cpu }}-${{ matrix.os }}" >"${{ github.workspace }}\bundle-cross\info\cross-list.txt"
       
-      - if: always() && (runner.os != 'Windows')
+      - if: (success() || failure()) && (runner.os != 'Windows')
         working-directory: "${{ github.workspace }}/fpc/src"
         shell: bash
         run: |
@@ -405,262 +405,10 @@ jobs:
           file: "${{ github.workspace }}/${{ inputs.bundle_name }}-cross-${{ matrix.cpu }}-${{ matrix.os }}.tar.gz"
           file_glob: true
 
-#     Build-Bundle-Cross:
-#       name: "Build FPC bundle of cross compilers"
-#       needs: Build-Bundle
-#       if: inputs.cross_compilers != ''
-#       runs-on: ${{ inputs.os }}
-#
-#       steps:
-#         - name: Check out
-#           uses: actions/checkout@v3
-#
-#         - name: Download FPC bundle
-#           uses: actions/download-artifact@v3
-#           id: download
-#           with:
-#               name: "${{ inputs.bundle_name }}.tar.gz"
-#               path: "${{ github.workspace }}"
-#
-#         - name: Untar the bundle
-#           working-directory: "${{ github.workspace }}"
-#           run: |
-#               tar zxvf "bundle-${{ runner.os }}.tar.gz"
-#               mv bundle fpc
-#
-#         - name: Get binutils
-#           if: runner.os == 'Windows'
-#           working-directory: "${{ github.workspace }}"
-#           run: git clone "https://gitlab.com/freepascal.org/fpc/binaries.git" fpc-binaries
-#
-#         - name: Add FPC to PATH (non-windows)
-#           if: runner.os != 'Windows'
-#           run: |
-#               echo  "${{ github.workspace }}/fpc/installed/bin" >> $GITHUB_PATH
-#               echo  "${{ github.workspace }}/fpc/installed/lib/fpc/${{ inputs.fpc_version }}" >> $GITHUB_PATH
-#
-#         - name: Copy cross tools
-#           if: runner.os != 'Windows'
-#           run: |
-#               cp -r ${{ github.workspace }}/src/cross/* ${{ github.workspace }}/fpc/installed/bin/
-#               ls -la ${{ github.workspace }}/src/cross/*
-#               ls -la ${{ github.workspace }}/fpc/installed/bin/*
-#
-#         - name: Create cross bundle
-#           working-directory: "${{ github.workspace }}"
-#           run: |
-#               mkdir bundle-cross
-#               cp -r fpc/* bundle-cross/
-#
-#         - name: List files
-#           working-directory: "${{ github.workspace }}"
-#           run: ls -R
-#
-#         - run: echo "Built crosscompilers:" >>$GITHUB_STEP_SUMMARY
-#
-#         - name: x86_64-win64
-#           if: always()
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: x86_64
-#             target_os:  win64
-#             opt: "${{ inputs.fpc_opt }}"
-#
-#         - name: i386-win32
-#           if: always() && (runner.os != 'Windows')
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: i386
-#             target_os:  win32
-#             opt: "${{ inputs.fpc_opt }}"
-#
-#         - name: arm-android
-#           if: always()
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: arm
-#             target_os:  android
-#             crossopt: "-Cparmv7a -Cfvfpv3"
-#             opt: "${{ inputs.fpc_opt }}"
-#
-#         - name: i386-linux
-#           if: always()
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: i386
-#             target_os:  linux
-#             opt: "${{ inputs.fpc_opt }}"
-#
-#         - name: x86_64-linux
-#           if: always() && (runner.os != 'Linux')
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: x86_64
-#             target_os:  linux
-#             opt: "${{ inputs.fpc_opt }}"
-#
-#         - name: arm-linux
-#           if: always()
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: arm
-#             target_os:  linux
-#             opt: "-dFPC_ARMEL ${{ inputs.fpc_opt }}"
-#
-#         - name: aarch64-linux
-#           if: always()
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: aarch64
-#             target_os:  linux
-#             opt: "${{ inputs.fpc_opt }}"
-#
-#         - name: avr-embedded
-#           if: always()
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: avr
-#             target_os:  embedded
-#             opt: "${{ inputs.fpc_opt }}"
-#             make_opt: SUBARCH=avr35
-#
-#         - name: m68k-atari
-#           if: always()
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: m68k
-#             target_os:  atari
-#             opt: "${{ inputs.fpc_opt }}"
-#             crossopt: -Cp68000
-#
-#         - name: powerpc-linux
-#           if: always()
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: powerpc
-#             target_os:  linux
-#             opt: "${{ inputs.fpc_opt }}"
-#
-#         - name: powerpc64-linux
-#           if: always()
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: powerpc64
-#             target_os:  linux
-#             opt: "${{ inputs.fpc_opt }}"
-#
-#         - name: sparc-linux
-#           if: always()
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: sparc
-#             target_os:  linux
-#             opt: "${{ inputs.fpc_opt }}"
-#
-#         - name: sparc64-linux
-#           if: always()
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: sparc64
-#             target_os:  linux
-#             opt: "${{ inputs.fpc_opt }}"
-#
-#         - name: mips-linux
-#           if: always()
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: mips
-#             target_os:  linux
-#             opt: "${{ inputs.fpc_opt }}"
-#
-#         - name: mipsel-linux
-#           if: always()
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: mipsel
-#             target_os:  linux
-#             opt: "${{ inputs.fpc_opt }}"
-#
-#         - name: riscv32-linux
-#           if: always() && (inputs.git_branch == 'main')
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: riscv32
-#             target_os:  linux
-#             opt: "${{ inputs.fpc_opt }}"
-#
-#         - name: riscv32-embedded
-#           if: always() && (inputs.git_branch == 'main')
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: riscv32
-#             target_os:  embedded
-#             opt: "${{ inputs.fpc_opt }}"
-#
-#         - name: riscv32-freetos
-#           if: always() && (inputs.git_branch == 'main')
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: riscv32
-#             target_os:  freetos
-#             opt: "${{ inputs.fpc_opt }}"
-#
-#         - name: riscv64-linux
-#           if: always() && (inputs.git_branch == 'main')
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: riscv64
-#             target_os:  linux
-#             opt: "${{ inputs.fpc_opt }}"
-#
-#         - name: riscv64-embedded
-#           if: always() && (inputs.git_branch == 'main')
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: riscv64
-#             target_os:  embedded
-#             opt: "${{ inputs.fpc_opt }}"
-#
-#         - name: wasm32-embedded
-#           if: always() && (inputs.git_branch == 'main')
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: wasm32
-#             target_os:  embedded
-#             opt: "BINUTILSPREFIX= OPT=\"-O-\" PP=fpc ${{ inputs.fpc_opt }}"
-#
-#         - name: wasm32-wasi
-#           if: always() && (inputs.git_branch == 'main')
-#           uses: ./.github/actions/make-fpc-cross
-#           with:
-#             target_cpu: wasm32
-#             target_os:  wasi
-#             opt: "BINUTILSPREFIX= OPT=\"-O-\" PP=fpc ${{ inputs.fpc_opt }}"
-#
-#         - name: Tar the cross bundle
-#           if: always()
-#           working-directory: "${{ github.workspace }}"
-#           run: tar -czvf "bundle-${{ runner.os }}-cross.tar.gz" bundle-cross/*
-#
-#         - name: Upload the cross bundle
-#           if: always()
-#           uses: actions/upload-artifact@v3
-#           with:
-#             name: "${{ inputs.bundle_name }}-cross.tar.gz"
-#             path: "${{ github.workspace }}/bundle-${{ runner.os }}-cross.tar.gz"
-#
-#         - name: Upload the cross bundle to release
-#           if: always() && startsWith(github.ref, 'refs/tags/')
-#           uses: svenstaro/upload-release-action@v2
-#           with:
-#             asset_name: "fpc-bundle-${{ runner.os }}-cross.tar.gz"
-#             file: "${{ github.workspace }}/bundle-${{ runner.os }}-cross.tar.gz"
-#             file_glob: true
-
   Aggregate-Cross:
     name: "Aggregate"
     needs: Build-Cross
-    if: always() && (inputs.cross_compilers != '')
+    if: (success() || failure()) && (inputs.cross_compilers != '')
     runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v3
