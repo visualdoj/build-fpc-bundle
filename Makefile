@@ -26,7 +26,7 @@ aggregate : $(BUNDLE_NAME)-cross.tar.gz ;
 $(BUNDLE_NAME)-cross.tar.gz : bundle-cross
 	$(TAR) -czvf $@ $</*
 bundle-cross : $(CROSS_UNPACKED)
-	$(TAR) -zxvf $(BUNDLE_NAME).tar.gz
+	$(TAR) -zxvf $(BUNDLE_NAME).tar.gz/$(BUNDLE_NAME).tar.gz
 	mv bundle $@
 	@$(ECHO) >$@/info/cross-list.txt
 	$(CAT) $(CROSS_LISTS) >>$@/info/cross-list.txt
