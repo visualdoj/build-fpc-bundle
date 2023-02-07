@@ -84,18 +84,12 @@ jobs:
     runs-on: ${{ inputs.os }}
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
-      matrix_full: ${{ steps.matrix_full.outputs.matrix_full }}
     steps:
       - uses: actions/checkout@v3
       - id:  matrix
         shell: bash
         run: |
             echo "matrix=$(python src/generate-matrix.py --host ${{ runner.os }} --cross ${{ inputs.cross }} --matrix matrix.json)" >>$GITHUB_OUTPUT
-            cat $GITHUB_OUTPUT
-      - id:  matrix_full
-        shell: bash
-        run: |
-            echo "matrix_full=$(cat matrix.json | awk '{print}' ORS='')" >>$GITHUB_OUTPUT
             cat $GITHUB_OUTPUT
 
   Build-Bundle:
@@ -207,7 +201,7 @@ jobs:
     continue-on-error: true
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.Init.outputs.matrix_full) }}
+      matrix: ${{ fromJSON(needs.Init.outputs.matrix) }}
 
     steps:
       - name: Check out
