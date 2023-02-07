@@ -95,8 +95,6 @@ jobs:
     needs: Init
     runs-on: ${{ inputs.os }}
     steps:
-      - run: echo "${{ needs.Init.outputs.matrix }}"
-
       - name: Check out
         uses: actions/checkout@v3
 
