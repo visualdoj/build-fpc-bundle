@@ -7,16 +7,57 @@ on:
   schedule:
     - cron: '* 0/6 * * *'
 jobs:
-  Build-3_2_3:
-    uses: ./.github/workflows/build-3-2-3.yml
+  Windows-3_2_3:
+    uses: ./.github/workflows/build-fpc-bundle-git.yml
+    with:
+      os: windows-latest
+      git_branch: fixes_3_2
+      bundle_name: fpc-3.2.3-Windows
     secrets: inherit
-  Build-main:
-    uses: ./.github/workflows/build-main.yml
+  Linux-3_2_3:
+    uses: ./.github/workflows/build-fpc-bundle-git.yml
+    with:
+      os: ubuntu-latest
+      git_branch: fixes_3_2
+      bundle_name: fpc-3.2.3-Linux
+    secrets: inherit
+  macOS-3_2_3:
+    uses: ./.github/workflows/build-fpc-bundle-git.yml
+    with:
+      os: macos-latest
+      git_branch: fixes_3_2
+      bundle_name: fpc-3.3.3-macOS
+      fpc_opt: "-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
+    secrets: inherit
+  Windows-main:
+    uses: ./.github/workflows/build-fpc-bundle-git.yml
+    with:
+      os: windows-latest
+      git_branch: main
+      bundle_name: fpc-3.3.1-Windows
+      fpc_version: 3.3.1
+    secrets: inherit
+  Linux-main:
+    uses: ./.github/workflows/build-fpc-bundle-git.yml
+    with:
+      os: ubuntu-latest
+      git_branch: main
+      bundle_name: fpc-3.2.3-Linux
+      fpc_version: 3.3.1
+    secrets: inherit
+  macOS-main:
+    uses: ./.github/workflows/build-fpc-bundle-git.yml
+    with:
+      os: macos-latest
+      git_branch: main
+      bundle_name: fpc-3.3.1-macOS
+      fpc_opt: "-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
+      fpc_version: 3.3.1
     secrets: inherit
 
   Final:
     if: always()
-    needs: [Build-3_2_3, Build-main]
+    needs: [Windows-3_2_3, Linux-3_2_3, macOS-3_2_3, Windows-main, Linux-main, macOS-main]
     runs-on: ubuntu-latest
     steps:
       - run: echo "# 🎉 Auto builds have been finished! 🎉" >>$GITHUB_STEP_SUMMARY
