@@ -8,14 +8,14 @@ ifeq ($(OS),Windows_NT)
   TAR  := tar.exe
   MV   := $(CURDIR)\bin\i386-win32\mv.exe
   ECHO := $(CURDIR)\bin\i386-win32\echo.exe
-  NOP  := $(BUILDTOOLSDIR)\bin\i386-win32\test.exe -z ""
+  PASS := $(BUILDTOOLSDIR)\bin\i386-win32\test.exe -z ""
 else
   CP   := cp
   CAT  := cat
   TAR  := tar
   MV   := mv
   ECHO := echo
-  NOP  := true
+  PASS := true
 endif
 
 ifneq ($(BUNDLE_NAME),)
@@ -38,7 +38,7 @@ bundle-cross : $(CROSS_UNPACKED)
 	@$(ECHO) >$@/info/cross-list.txt
 	$(CAT) $(CROSS_LISTS) >>$@/info/cross-list.txt
 	$(CAT) $(CROSS_CFG)   >>$@/fpc.cfg
-	$(CP) -f $(CROSS_BIN) $@/installed/bin/
+	$(CP) -f $(CROSS_BIN) $@/installed/bin/ || $(PASS)
 $(BUNDLE_NAME)-%-unpacked : $(BUNDLE_NAME)-%.tar.gz config
 	$(TAR) -zxvf $</$<
 	$(MV) bundle-cross $@
