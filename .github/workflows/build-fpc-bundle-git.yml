@@ -78,23 +78,8 @@ on:
         default: 'all'
 
 jobs:
-  Init:
-    name: Init
-    if: inputs.cross != ''
-    runs-on: ${{ inputs.os }}
-    outputs:
-      matrix: ${{ steps.matrix.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@v3
-      - id:  matrix
-        shell: bash
-        run: |
-            echo "matrix=$(python src/generate-matrix.py --host ${{ runner.os }} --cross ${{ inputs.cross }} --matrix matrix.json)" >>$GITHUB_OUTPUT
-            cat $GITHUB_OUTPUT
-
   Build-Host:
     name: Host
-    needs: Init
     runs-on: ${{ inputs.os }}
     steps:
       - name: Check out
@@ -194,9 +179,24 @@ jobs:
           file: "${{ github.workspace }}/${{ inputs.bundle_name }}.tar.gz"
           file_glob: true
 
+  Init:
+    name: Init
+    needs: Build-Host
+    if: inputs.cross != ''
+    runs-on: ${{ inputs.os }}
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v3
+      - id:  matrix
+        shell: bash
+        run: |
+            echo "matrix=$(python src/generate-matrix.py --host ${{ runner.os }} --cross ${{ inputs.cross }} --matrix matrix.json)" >>$GITHUB_OUTPUT
+            cat $GITHUB_OUTPUT
+
   Build-Cross:
     name: "Cross"
-    needs: Build-Host
+    needs: Init
     if: inputs.cross != ''
     runs-on: ${{ inputs.os }}
     continue-on-error: true
