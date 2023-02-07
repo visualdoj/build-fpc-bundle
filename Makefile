@@ -24,7 +24,10 @@ CROSS_UNPACKED:=$(CROSS_ARTIFACTS:%.tar.gz=%-unpacked)
 CROSS_LISTS   :=$(CROSS_ARTIFACTS:%.tar.gz=%-unpacked/info/cross-list.txt)
 CROSS_CFG     :=$(CROSS_ARTIFACTS:%.tar.gz=%-unpacked/fpc.cfg)
 CROSS_BIN     :=$(CROSS_ARTIFACTS:%.tar.gz=%-unpacked/installed/bin/*)
-CROSS_PP      :=$(CROSS_ARTIFACTS:%.tar.gz=%-unpacked/installed/lib/fpc/*/ppcross*)
+
+  ifneq ($(OS),Windows_NT)
+    CROSS_BIN += $(CROSS_ARTIFACTS:%.tar.gz=%-unpacked/installed/lib/fpc/*/ppcross*)
+  endif
 
 aggregate : $(BUNDLE_NAME)-cross.tar.gz ;
 $(BUNDLE_NAME)-cross.tar.gz : bundle-cross
@@ -35,8 +38,7 @@ bundle-cross : $(CROSS_UNPACKED)
 	@$(ECHO) >$@/info/cross-list.txt
 	$(CAT) $(CROSS_LISTS) >>$@/info/cross-list.txt
 	$(CAT) $(CROSS_CFG)   >>$@/fpc.cfg
-	$(CP)  $(CROSS_BIN) $@/installed/bin/
-	$(CP)  $(CROSS_PP)  $@/installed/bin/
+	$(CP) -f $(CROSS_BIN) $@/installed/bin/
 $(BUNDLE_NAME)-%-unpacked : $(BUNDLE_NAME)-%.tar.gz config
 	$(TAR) -zxvf $</$<
 	$(MV) bundle-cross $@
