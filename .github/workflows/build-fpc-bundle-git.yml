@@ -73,6 +73,7 @@ on:
         default: '3.2.3'
       cross:
         description: 'Which cross crompilers build'
+        type: string
         required: false
         default: 'all'
 
