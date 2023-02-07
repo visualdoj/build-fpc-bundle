@@ -1,4 +1,4 @@
-name: Build FPC 3.2.2
+name: Build FPC 3.2.3
 
 on:
   workflow_dispatch:
