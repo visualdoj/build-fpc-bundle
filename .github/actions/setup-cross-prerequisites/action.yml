@@ -95,7 +95,6 @@ runs:
            sudo apt-get install -y "crossbuild-essential-s390x"
 
     - if: (success() || failure()) && (runner.os == 'Linux') && (inputs.target_os == 'android')
-      id: setup-ndk
       uses: nttld/setup-ndk@v1
       with:
           ndk-version: r25b
