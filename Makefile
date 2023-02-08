@@ -47,10 +47,9 @@ config :
 	$(ECHO) $(CROSS_UNPACKED)
 	$(ECHO) $(CROSS_LISTS)
 	$(ECHO) $(CROSS_CFG)
-	$(ECHO) $(CROSS_BIN)
-	$(ECHO) $(CROSS_PP)
+	$(ECHO) "$(CROSS_BIN)"
+	$(ECHO) "$(CROSS_PP)"
 else
 aggregate :
 	@$(ECHO) You should specify BUNDLE_NAME to run aggregate
 endif
-
