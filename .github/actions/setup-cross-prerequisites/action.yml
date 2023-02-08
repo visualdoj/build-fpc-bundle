@@ -97,16 +97,16 @@ runs:
     - if: (success() || failure()) && (runner.os == 'Linux') && (inputs.target_os == 'android')
       uses: nttld/setup-ndk@v1
       with:
-          ndk-version: r25b
+          ndk-version: r21d
 
     - if: (success() || failure()) && (runner.os == 'Windows') && (inputs.target_os == 'android')
       id: setup-ndk
       uses: nttld/setup-ndk@v1
       with:
-          ndk-version: r12b
+          ndk-version: r21d
 
     - if: (success() || failure()) && (runner.os == 'Windows') && (inputs.target_os == 'android')
       shell: bash
       run: |
-          echo -n ";${{ steps.setup-ndk.outputs.ndk-path }}\toolchains\llvm\prebuilt\windows-x86_64\bin" >>PATH.txt
+          echo -n ";${{ steps.setup-ndk.outputs.ndk-path }}\aarch64-linux-android-4.9\prebuilt\windows-x86_64\bin" >>PATH.txt
           ls -R "${{ steps.setup-ndk.outputs.ndk-path }}"
