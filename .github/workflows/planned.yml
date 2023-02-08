@@ -22,24 +22,24 @@ jobs:
     uses: ./.github/workflows/build-fpc-bundle-git.yml
     with:
       os: windows-latest
-      git_branch: ${{ github.branch }}
-      bundle_name: fpc-${{ github.version }}-Windows
-      cross: ${{ github.cross }}
+      git_branch: ${{ inputs.branch }}
+      bundle_name: fpc-${{ inputs.version }}-Windows
+      cross: ${{ inputs.cross }}
     secrets: inherit
   Linux:
     uses: ./.github/workflows/build-fpc-bundle-git.yml
     with:
       os: ubuntu-latest
-      git_branch: ${{ github.branch }}
-      bundle_name: fpc-${{ github.version }}-Linux
-      cross: ${{ github.cross }}
+      git_branch: ${{ inputs.branch }}
+      bundle_name: fpc-${{ inputs.version }}-Linux
+      cross: ${{ inputs.cross }}
     secrets: inherit
   macOS:
     uses: ./.github/workflows/build-fpc-bundle-git.yml
     with:
       os: macos-latest
-      git_branch: ${{ github.branch }}
-      bundle_name: fpc-${{ github.version }}-macOS
+      git_branch: ${{ inputs.branch }}
+      bundle_name: fpc-${{ inputs.version }}-macOS
       fpc_opt: "-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
-      cross: ${{ github.cross }}
+      cross: ${{ inputs.cross }}
     secrets: inherit
