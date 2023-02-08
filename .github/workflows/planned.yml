@@ -41,5 +41,6 @@ jobs:
       git_branch: ${{ inputs.branch }}
       bundle_name: fpc-${{ inputs.version }}-macOS
       fpc_opt: "-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
+      fpc: system
       cross: ${{ inputs.cross }}
     secrets: inherit
