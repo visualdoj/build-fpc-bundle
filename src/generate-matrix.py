@@ -75,7 +75,7 @@ def generate_matrix(host, cross, matrix_filename):
                 cross_list += COMMON
             if 'supported' in cross or 'push' in cross:
                 cross_list += SUPPORTED
-            if 'planned' in cross:
+            if 'planned' in cross or 'push' in cross:
                 cross_list += PLANNED
             for include in include_list[:]:
                 if  host + '->' + include.get('cpu','') + '-' + include.get('os','') not in cross_list \
