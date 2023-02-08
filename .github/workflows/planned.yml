@@ -1,0 +1,45 @@
+name: Planned
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_to:
+        description: 'Release to the specified tag (if needed)'
+        required: false
+        default: ''
+      branch:
+        required: false
+        default: 'fixes_3_2'
+      cross:
+        required: false
+        default: 'planned'
+      version:
+        required: false
+        default: '3.2.3'
+
+jobs:
+  Windows:
+    uses: ./.github/workflows/build-fpc-bundle-git.yml
+    with:
+      os: windows-latest
+      git_branch: ${{ github.branch }}
+      bundle_name: fpc-${{ github.version }}-Windows
+      cross: ${{ github.cross }}
+    secrets: inherit
+  Linux:
+    uses: ./.github/workflows/build-fpc-bundle-git.yml
+    with:
+      os: ubuntu-latest
+      git_branch: ${{ github.branch }}
+      bundle_name: fpc-${{ github.version }}-Linux
+      cross: ${{ github.cross }}
+    secrets: inherit
+  macOS:
+    uses: ./.github/workflows/build-fpc-bundle-git.yml
+    with:
+      os: macos-latest
+      git_branch: ${{ github.branch }}
+      bundle_name: fpc-${{ github.version }}-macOS
+      fpc_opt: "-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
+      cross: ${{ github.cross }}
+    secrets: inherit
