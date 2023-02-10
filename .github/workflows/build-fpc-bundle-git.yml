@@ -178,6 +178,7 @@ jobs:
           asset_name: "${{ inputs.bundle_name }}.tar.gz"
           file: "${{ github.workspace }}/${{ inputs.bundle_name }}.tar.gz"
           file_glob: true
+          overwrite: true
 
   Init:
     name: Init
@@ -304,6 +305,7 @@ jobs:
           asset_name: "${{ inputs.bundle_name }}-cross-${{ matrix.cpu }}-${{ matrix.os }}.tar.gz"
           file: "${{ github.workspace }}/${{ inputs.bundle_name }}-cross-${{ matrix.cpu }}-${{ matrix.os }}.tar.gz"
           file_glob: true
+          overwrite: true
 
   Aggregate-Cross:
     name: "Aggregate"
@@ -329,3 +331,4 @@ jobs:
           asset_name: "${{ inputs.bundle_name }}-cross.tar.gz"
           file: "${{ github.workspace }}/${{ inputs.bundle_name }}-cross.tar.gz"
           file_glob: true
+          overwrite: true
