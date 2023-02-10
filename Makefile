@@ -43,7 +43,7 @@ CROSS_BIN     :=$(CROSS_ARTIFACTS:%.tar.gz=%-unpacked/installed/bin/*)
 aggregate : $(BUNDLE_NAME)-cross.tar.gz ;
 $(BUNDLE_NAME)-cross.tar.gz : bundle-cross
 	cd $< && $(TAR) -czf ../$@ *
-bundle-cross : $(CROSS_UNPACKED) $(BUNDLE_NAME).tar.gz
+bundle-cross : $(CROSS_UNPACKED) $(BUNDLE_NAME).tar.gz/$(BUNDLE_NAME).tar.gz
 	$(MKDIR) -p $@
 	cd $@ && $(TAR) -zxf ../$(BUNDLE_NAME).tar.gz/$(BUNDLE_NAME).tar.gz
 	$(ECHO) >$@/info/cross-list.txt
