@@ -110,7 +110,7 @@ jobs:
 
       - name: Install Free Pascal Compiler (GitHub Action)
         if: inputs.fpc == 'setup-fpc'
-        uses: visualdoj/setup-fpc@main
+        uses: visualdoj/setup-fpc@v0.2.0-beta
 
       - name: Print FPC version
         run: fpc -i
@@ -316,7 +316,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
       - run: ls -R
-      - run: make aggregate BUNDLE_NAME=${{ inputs.bundle_name }}
+      - run: make aggregate BUNDLE_NAME=${{ inputs.bundle_name }} VERBOSE=1
 
       - name: Upload the bundle
         uses: actions/upload-artifact@v3
