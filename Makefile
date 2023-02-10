@@ -3,19 +3,22 @@ default : aggregate ;
 .PHONY : aggregate ;
 
 ifeq ($(OS),Windows_NT)
-  CP   := $(CURDIR)\bin\i386-win32\cp.exe
-  CAT  := $(CURDIR)\bin\i386-win32\cat.exe
-  TAR  := tar.exe
-  MV   := $(CURDIR)\bin\i386-win32\mv.exe
-  ECHO := $(CURDIR)\bin\i386-win32\echo.exe
-  PASS := $(BUILDTOOLSDIR)\bin\i386-win32\test.exe -z ""
+  WINDOWS_TOOLS := $(CURDIR)\bin\i386-win32
+  CP    := $(WINDOWS_TOOLS)\cp.exe
+  CAT   := $(WINDOWS_TOOLS)\cat.exe
+  TAR   := tar.exe
+  MV    := $(WINDOWS_TOOLS)\mv.exe
+  ECHO  := $(WINDOWS_TOOLS)\echo.exe
+  PASS  := $(WINDOWS_TOOLS)\test.exe -z ""
+  MKDIR := $(WINDOWS_TOOLS)\mkdir.exe
 else
-  CP   := cp
-  CAT  := cat
-  TAR  := tar
-  MV   := mv
-  ECHO := echo
-  PASS := true
+  CP    := cp
+  CAT   := cat
+  TAR   := tar
+  MV    := mv
+  ECHO  := echo
+  PASS  := true
+  MKDIR := mkdir
 endif
 
 ifneq ($(BUNDLE_NAME),)
@@ -31,17 +34,17 @@ CROSS_BIN     :=$(CROSS_ARTIFACTS:%.tar.gz=%-unpacked/installed/bin/*)
 
 aggregate : $(BUNDLE_NAME)-cross.tar.gz ;
 $(BUNDLE_NAME)-cross.tar.gz : bundle-cross
-	$(TAR) -czvf $@ $</*
+	cd $< && $(TAR) -czvf ../$@ *
 bundle-cross : $(CROSS_UNPACKED)
-	$(TAR) -zxvf $(BUNDLE_NAME).tar.gz/$(BUNDLE_NAME).tar.gz
-	$(MV) bundle $@
+	$(MKDIR) -p $@
+	cd $@ && $(TAR) -zxvf ../$(BUNDLE_NAME).tar.gz/$(BUNDLE_NAME).tar.gz
 	@$(ECHO) >$@/info/cross-list.txt
 	$(CAT) $(CROSS_LISTS) >>$@/info/cross-list.txt
 	$(CAT) $(CROSS_CFG)   >>$@/fpc.cfg
 	$(CP) -f $(CROSS_BIN) $@/installed/bin/ || $(PASS)
 $(BUNDLE_NAME)-%-unpacked : $(BUNDLE_NAME)-%.tar.gz config
-	$(TAR) -zxvf $</$<
-	$(MV) bundle-cross $@
+	$(MKDIR) -p $@
+	cd $@ && $(TAR) -zxvf ../$</$<
 config :
 	$(ECHO) $(CROSS_ARTIFACTS)
 	$(ECHO) $(CROSS_UNPACKED)

@@ -162,8 +162,8 @@ jobs:
             fpc -i >info/fpc-version.txt
 
       - name: Tar the bundle
-        working-directory: "${{ github.workspace }}"
-        run: tar -czvf "${{ inputs.bundle_name }}.tar.gz" bundle/*
+        working-directory: "${{ github.workspace }}/bundle"
+        run: tar -czvf "../${{ inputs.bundle_name }}.tar.gz" *
 
       - name: Upload the bundle
         uses: actions/upload-artifact@v3
@@ -221,8 +221,8 @@ jobs:
       - name: Untar the bundle
         working-directory: "${{ github.workspace }}"
         run: |
-            tar zxvf "${{ inputs.bundle_name }}.tar.gz"
-            mv bundle fpc
+            mkdir fpc
+            cd fpc && tar zxvf "../${{ inputs.bundle_name }}.tar.gz"
 
       - name: Add FPC to PATH (non-windows)
         if: runner.os != 'Windows'
@@ -288,8 +288,8 @@ jobs:
              echo "#ENDIF" >>"${{ github.workspace }}/bundle-cross/fpc.cfg"
 
       - name: Tar the cross bundle
-        working-directory: "${{ github.workspace }}"
-        run: tar -czvf "${{ inputs.bundle_name }}-cross-${{ matrix.cpu }}-${{ matrix.os }}.tar.gz" bundle-cross/*
+        working-directory: "${{ github.workspace }}/bundle-cross"
+        run: tar -czvf "../${{ inputs.bundle_name }}-cross-${{ matrix.cpu }}-${{ matrix.os }}.tar.gz" *
 
       - name: Upload the cross bundle
         uses: actions/upload-artifact@v3
