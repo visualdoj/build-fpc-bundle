@@ -1,6 +1,6 @@
 default : aggregate ;
 
-.PHONY : aggregate ;
+.PHONY : aggregate config ;
 
 ifneq ($(VERBOSE),)
   TAR_FLAGS := -v
