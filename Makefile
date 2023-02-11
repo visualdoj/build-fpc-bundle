@@ -8,15 +8,15 @@ ifneq ($(VERBOSE),)
 endif
 
 ifeq ($(OS),Windows_NT)
-  WINDOWS_TOOLS := $(CURDIR)\bin\i386-win32
-  CP    := $(WINDOWS_TOOLS)\cp.exe
-  CAT   := $(WINDOWS_TOOLS)\cat.exe
+  WINDOWS_TOOLS := $(CURDIR)/bin/i386-win32
+  CP    := $(WINDOWS_TOOLS)/cp.exe
+  CAT   := $(WINDOWS_TOOLS)/cat.exe
   TAR   := tar.exe $(TAR_FLAGS)
-  MV    := $(WINDOWS_TOOLS)\mv.exe
-  ECHO  := $(WINDOWS_TOOLS)\echo.exe
-  PASS  := $(WINDOWS_TOOLS)\test.exe -z ""
-  MKDIR := $(WINDOWS_TOOLS)\mkdir.exe
-  UNZIP := $(WINDOWS_TOOLS)\unzip.exe
+  MV    := $(WINDOWS_TOOLS)/mv.exe
+  ECHO  := $(WINDOWS_TOOLS)/echo.exe
+  PASS  := $(WINDOWS_TOOLS)/test.exe -z ""
+  MKDIR := $(WINDOWS_TOOLS)/mkdir.exe
+  UNZIP := $(WINDOWS_TOOLS)/unzip.exe
 else
   CP    := cp
   CAT   := cat
