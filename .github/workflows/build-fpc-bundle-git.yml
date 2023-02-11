@@ -153,7 +153,7 @@ jobs:
 
       - name: fpc.cfg (non-Windows)
         if: runner.os != 'Windows'
-        run: fpcmkcfg -d basepath="\$FPC_INSTALLED_DIR\$/lib/fpc/\$FPCVERSION\$" -o "${{ github.workspace }}/bundle/fpc.cfg"
+        run: fpcmkcfg -d basepath="\$FPC_INSTALLED_DIR\$/lib/fpc/\$FPCVERSION" -o "${{ github.workspace }}/bundle/fpc.cfg"
 
       - name: Generate info
         working-directory: "${{ github.workspace }}/bundle"
