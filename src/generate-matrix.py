@@ -9,7 +9,7 @@ COMMON = [
     "Windows->x86_64-win64",
 ]
 
-SUPPORTED = [
+REGULAR = COMMON + [
     "Linux->i386-win32",
     "Linux->i386-linux",
     "Linux->i386-wince",
@@ -26,7 +26,6 @@ SUPPORTED = [
     "Windows->i386-embedded",
     "Windows->i386-nativent",
     "Windows->powerpc-linux",
-    "Windows->powerpc-netbsd",
     "Windows->sparc-linux",
     "Windows->x86_64-linux",
     "Windows->x86_64-freebsd",
@@ -52,6 +51,10 @@ SUPPORTED = [
     "macOS->x86_64-win64",
 ]
 
+SUPPORTED = REGULAR + [
+    "Windows->powerpc-netbsd", # compiles more than hour
+]
+
 PLANNED = [
     "Linux->aarch64-android",
     "Windows->aarch64-android",
@@ -74,7 +77,7 @@ def generate_matrix(host, cross, matrix_filename):
             if 'common' in cross_list:
                 cross_list += COMMON
             if 'supported' in cross or 'push' in cross:
-                cross_list += SUPPORTED
+                cross_list += REGULAR
             if 'planned' in cross or 'push' in cross:
                 cross_list += PLANNED
             for include in include_list[:]:
