@@ -46,7 +46,6 @@ $(BUNDLE_NAME)-cross.tar.gz : bundle-cross
 bundle-cross : $(CROSS_UNPACKED) $(BUNDLE_NAME).tar.gz/$(BUNDLE_NAME).tar.gz
 	$(MKDIR) -p $@
 	cd $@ && $(TAR) -zxf ../$(BUNDLE_NAME).tar.gz/$(BUNDLE_NAME).tar.gz
-	$(ECHO) >$@/info/cross-list.txt
 	$(CAT) $(CROSS_LISTS) >>$@/info/cross-list.txt
 	$(CAT) $(CROSS_CFG)   >>$@/fpc.cfg
 	$(CP) -f $(CROSS_BIN) $@/installed/bin/ || $(PASS)
