@@ -110,7 +110,7 @@ jobs:
 
       - name: Install Free Pascal Compiler (GitHub Action)
         if: inputs.fpc == 'setup-fpc'
-        uses: visualdoj/setup-fpc@master
+        uses: visualdoj/setup-fpc@main
 
       - name: Print FPC version
         run: fpc -i
