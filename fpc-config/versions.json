@@ -43,7 +43,7 @@
       "priority": 10,
       "status": "legacy",
       "run_tests": true,
-      "enabled": false
+      "enabled": true
     },
     {
       "name": "2.6.4",
@@ -52,7 +52,7 @@
       "priority": 11,
       "status": "legacy",
       "run_tests": true,
-      "enabled": true
+      "enabled": false
     },
     {
       "name": "2.4.4",
