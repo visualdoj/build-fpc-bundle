@@ -13,11 +13,16 @@ import urllib.parse
 from datetime import datetime
 
 
-def get_gitlab_branch_commit(api_base: str, branch: str) -> dict:
-    """Fetch the latest commit info for a branch from GitLab API."""
-    # URL-encode branch name (e.g., "svn/fixes_2_2" -> "svn%2Ffixes_2_2")
-    encoded_branch = urllib.parse.quote(branch, safe='')
-    url = f"{api_base}/repository/branches/{encoded_branch}"
+def get_gitlab_ref_commit(api_base: str, ref: str, ref_type: str = 'branch') -> dict:
+    """Fetch the latest commit info for a branch or tag from GitLab API."""
+    # URL-encode ref name (e.g., "svn/fixes_2_2" -> "svn%2Ffixes_2_2")
+    encoded_ref = urllib.parse.quote(ref, safe='')
+
+    if ref_type == 'tag':
+        url = f"{api_base}/repository/tags/{encoded_ref}"
+    else:
+        url = f"{api_base}/repository/branches/{encoded_ref}"
+
     try:
         with urllib.request.urlopen(url, timeout=30) as response:
             data = json.loads(response.read().decode('utf-8'))
@@ -27,10 +32,10 @@ def get_gitlab_branch_commit(api_base: str, branch: str) -> dict:
                 'message': data['commit']['title']
             }
     except urllib.error.HTTPError as e:
-        print(f"Warning: Could not fetch branch {branch}: {e}", file=sys.stderr)
+        print(f"Warning: Could not fetch {ref_type} {ref}: {e}", file=sys.stderr)
         return None
     except Exception as e:
-        print(f"Error fetching branch {branch}: {e}", file=sys.stderr)
+        print(f"Error fetching {ref_type} {ref}: {e}", file=sys.stderr)
         return None
 
 
@@ -66,16 +71,17 @@ def main():
             continue
 
         version_name = version['name']
-        branch = version['branch']
+        ref = version['branch']  # Can be branch or tag name
+        ref_type = version.get('ref_type', 'branch')  # 'branch' or 'tag'
 
         # Apply version filter if specified
         if args.version_filter and args.version_filter != version_name:
             continue
 
-        print(f"Checking {version_name} (branch: {branch})...", file=sys.stderr)
+        print(f"Checking {version_name} ({ref_type}: {ref})...", file=sys.stderr)
 
         # Get latest commit from GitLab
-        commit_info = get_gitlab_branch_commit(gitlab_api, branch)
+        commit_info = get_gitlab_ref_commit(gitlab_api, ref, ref_type)
         if not commit_info:
             print(f"  Skipping {version_name}: could not fetch commit info", file=sys.stderr)
             continue

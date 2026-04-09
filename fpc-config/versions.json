@@ -29,7 +29,8 @@
     },
     {
       "name": "3.2.2",
-      "branch": "release_3_2_0",
+      "branch": "release_3_2_2",
+      "ref_type": "tag",
       "bootstrap_fpc": "3.0.4",
       "priority": 4,
       "status": "stable",
