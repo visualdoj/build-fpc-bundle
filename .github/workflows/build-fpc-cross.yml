@@ -21,7 +21,24 @@ on:
         required: true
 
 jobs:
+  # Skip job entirely if targets is empty
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      has_targets: ${{ steps.check.outputs.has_targets }}
+    steps:
+      - id: check
+        run: |
+          TARGETS='${{ inputs.targets }}'
+          if [[ "$TARGETS" == "[]" || -z "$TARGETS" ]]; then
+            echo "has_targets=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_targets=true" >> $GITHUB_OUTPUT
+          fi
+
   build-cross:
+    needs: check
+    if: needs.check.outputs.has_targets == 'true'
     name: Cross (${{ matrix.cpu }}-${{ matrix.os }})
     runs-on: ${{ inputs.os }}
     continue-on-error: true

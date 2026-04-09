@@ -35,16 +35,16 @@
       "priority": 4,
       "status": "stable",
       "run_tests": true,
-      "enabled": false
+      "enabled": true
     },
     {
       "name": "3.2.0",
       "branch": "release_3_2_0",
       "ref_type": "tag",
-      "bootstrap_fpc": "system",
+      "bootstrap_fpc": "3.2.0",
       "priority": 5,
       "status": "stable",
-      "run_tests": false,
+      "run_tests": true,
       "enabled": true
     },
     {
