@@ -72,19 +72,14 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     outputs:
-      host_matrix: ${{ steps.matrix.outputs.host_matrix }}
       cross_matrix_windows: ${{ steps.matrix.outputs.cross_matrix_windows }}
       cross_matrix_linux: ${{ steps.matrix.outputs.cross_matrix_linux }}
       cross_matrix_macos: ${{ steps.matrix.outputs.cross_matrix_macos }}
-      release_tag: ${{ steps.matrix.outputs.release_tag }}
-      build_date: ${{ steps.matrix.outputs.build_date }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: Generate matrices
         id: matrix
         run: |
@@ -93,6 +88,7 @@ jobs:
             --tier "${{ inputs.tier }}" \
             --version "${{ inputs.version }}"
 
+  # ============ WINDOWS ============
   build-host-windows:
     needs: prepare
     uses: ./.github/workflows/build-fpc-host.yml
@@ -104,26 +100,14 @@ jobs:
       fpc_opt: ''
     secrets: inherit
 
-  build-host-linux:
-    needs: prepare
-    uses: ./.github/workflows/build-fpc-host.yml
+  test-windows:
+    needs: build-host-windows
+    if: inputs.run_tests == 'true'
+    uses: ./.github/workflows/run-fpc-tests.yml
     with:
-      os: ubuntu-latest
+      os: windows-latest
       version: ${{ inputs.version }}
-      branch: ${{ inputs.branch }}
-      bootstrap_fpc: ${{ inputs.bootstrap_fpc }}
-      fpc_opt: ''
-    secrets: inherit
-
-  build-host-macos:
-    needs: prepare
-    uses: ./.github/workflows/build-fpc-host.yml
-    with:
-      os: macos-26-intel
-      version: ${{ inputs.version }}
-      branch: ${{ inputs.branch }}
-      bootstrap_fpc: ${{ inputs.bootstrap_fpc }}
-      fpc_opt: '-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/'
+      host_bundle: fpc-${{ inputs.version }}-windows
     secrets: inherit
 
   build-cross-windows:
@@ -137,6 +121,49 @@ jobs:
       targets: ${{ needs.prepare.outputs.cross_matrix_windows }}
     secrets: inherit
 
+  gate-windows:
+    needs: [build-host-windows, test-windows, build-cross-windows]
+    if: always()
+    runs-on: ubuntu-latest
+    outputs:
+      include: ${{ steps.check.outputs.include }}
+    steps:
+      - name: Check Windows build status
+        id: check
+        run: |
+          HOST="${{ needs.build-host-windows.result }}"
+          TEST="${{ needs.test-windows.result }}"
+          # Include if host succeeded AND (tests passed OR tests were skipped)
+          if [[ "$HOST" == "success" && ("$TEST" == "success" || "$TEST" == "skipped") ]]; then
+            echo "include=true" >> $GITHUB_OUTPUT
+            echo "Windows: PASS"
+          else
+            echo "include=false" >> $GITHUB_OUTPUT
+            echo "Windows: FAIL (host=$HOST, test=$TEST)"
+          fi
+
+  # ============ LINUX ============
+  build-host-linux:
+    needs: prepare
+    uses: ./.github/workflows/build-fpc-host.yml
+    with:
+      os: ubuntu-latest
+      version: ${{ inputs.version }}
+      branch: ${{ inputs.branch }}
+      bootstrap_fpc: ${{ inputs.bootstrap_fpc }}
+      fpc_opt: ''
+    secrets: inherit
+
+  test-linux:
+    needs: build-host-linux
+    if: inputs.run_tests == 'true'
+    uses: ./.github/workflows/run-fpc-tests.yml
+    with:
+      os: ubuntu-latest
+      version: ${{ inputs.version }}
+      host_bundle: fpc-${{ inputs.version }}-linux
+    secrets: inherit
+
   build-cross-linux:
     needs: [prepare, build-host-linux]
     if: inputs.tier != 'none' && needs.prepare.outputs.cross_matrix_linux != '[]'
@@ -146,6 +173,48 @@ jobs:
       version: ${{ inputs.version }}
       host_bundle: fpc-${{ inputs.version }}-linux
       targets: ${{ needs.prepare.outputs.cross_matrix_linux }}
+    secrets: inherit
+
+  gate-linux:
+    needs: [build-host-linux, test-linux, build-cross-linux]
+    if: always()
+    runs-on: ubuntu-latest
+    outputs:
+      include: ${{ steps.check.outputs.include }}
+    steps:
+      - name: Check Linux build status
+        id: check
+        run: |
+          HOST="${{ needs.build-host-linux.result }}"
+          TEST="${{ needs.test-linux.result }}"
+          if [[ "$HOST" == "success" && ("$TEST" == "success" || "$TEST" == "skipped") ]]; then
+            echo "include=true" >> $GITHUB_OUTPUT
+            echo "Linux: PASS"
+          else
+            echo "include=false" >> $GITHUB_OUTPUT
+            echo "Linux: FAIL (host=$HOST, test=$TEST)"
+          fi
+
+  # ============ MACOS ============
+  build-host-macos:
+    needs: prepare
+    uses: ./.github/workflows/build-fpc-host.yml
+    with:
+      os: macos-26-intel
+      version: ${{ inputs.version }}
+      branch: ${{ inputs.branch }}
+      bootstrap_fpc: ${{ inputs.bootstrap_fpc }}
+      fpc_opt: '-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/'
+    secrets: inherit
+
+  test-macos:
+    needs: build-host-macos
+    if: inputs.run_tests == 'true'
+    uses: ./.github/workflows/run-fpc-tests.yml
+    with:
+      os: macos-26-intel
+      version: ${{ inputs.version }}
+      host_bundle: fpc-${{ inputs.version }}-macos
     secrets: inherit
 
   build-cross-macos:
@@ -159,40 +228,62 @@ jobs:
       targets: ${{ needs.prepare.outputs.cross_matrix_macos }}
     secrets: inherit
 
-  run-tests:
-    needs: [build-host-windows, build-host-linux, build-host-macos]
-    if: inputs.run_tests == 'true'
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            name: linux
-          - os: windows-latest
-            name: windows
-          - os: macos-26-intel
-            name: macos
-    uses: ./.github/workflows/run-fpc-tests.yml
-    with:
-      os: ${{ matrix.os }}
-      version: ${{ inputs.version }}
-      host_bundle: fpc-${{ inputs.version }}-${{ matrix.name }}
-    secrets: inherit
+  gate-macos:
+    needs: [build-host-macos, test-macos, build-cross-macos]
+    if: always()
+    runs-on: ubuntu-latest
+    outputs:
+      include: ${{ steps.check.outputs.include }}
+    steps:
+      - name: Check macOS build status
+        id: check
+        run: |
+          HOST="${{ needs.build-host-macos.result }}"
+          TEST="${{ needs.test-macos.result }}"
+          if [[ "$HOST" == "success" && ("$TEST" == "success" || "$TEST" == "skipped") ]]; then
+            echo "include=true" >> $GITHUB_OUTPUT
+            echo "macOS: PASS"
+          else
+            echo "include=false" >> $GITHUB_OUTPUT
+            echo "macOS: FAIL (host=$HOST, test=$TEST)"
+          fi
 
+  # ============ RELEASE ============
   create-release:
-    needs: [prepare, build-host-windows, build-host-linux, build-host-macos, build-cross-windows, build-cross-linux, build-cross-macos, run-tests]
-    if: |
-      always() &&
-      (needs.build-host-windows.result == 'success' || needs.build-host-linux.result == 'success' || needs.build-host-macos.result == 'success') &&
-      (needs.run-tests.result == 'success' || needs.run-tests.result == 'skipped')
+    needs: [gate-windows, gate-linux, gate-macos]
+    if: always() && (needs.gate-windows.outputs.include == 'true' || needs.gate-linux.outputs.include == 'true' || needs.gate-macos.outputs.include == 'true')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download all artifacts
+      - name: Download Windows artifacts
+        if: needs.gate-windows.outputs.include == 'true'
         uses: actions/download-artifact@v4
         with:
+          pattern: fpc-${{ inputs.version }}-windows*
           path: artifacts
+          merge-multiple: true
+
+      - name: Download Linux artifacts
+        if: needs.gate-linux.outputs.include == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fpc-${{ inputs.version }}-linux*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Download macOS artifacts
+        if: needs.gate-macos.outputs.include == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fpc-${{ inputs.version }}-macos*
+          path: artifacts
+          merge-multiple: true
+
+      - name: List artifacts
+        run: |
+          echo "Artifacts to release:"
+          find artifacts -name "*.tar.gz" 2>/dev/null || echo "No artifacts found"
 
       - name: Generate release manifest
         run: |
@@ -209,10 +300,21 @@ jobs:
         run: |
           RELEASE_TAG="${{ env.RELEASE_TAG }}"
           RELEASE_TITLE="FPC ${{ inputs.version }} (latest build)"
+
+          # Build status
+          WIN_STATUS="${{ needs.gate-windows.outputs.include == 'true' && 'included' || 'excluded (build/test failed)' }}"
+          LIN_STATUS="${{ needs.gate-linux.outputs.include == 'true' && 'included' || 'excluded (build/test failed)' }}"
+          MAC_STATUS="${{ needs.gate-macos.outputs.include == 'true' && 'included' || 'excluded (build/test failed)' }}"
+
           RELEASE_NOTES="Automated build of FPC ${{ inputs.version }} from branch ${{ inputs.branch }}
 
           **Commit:** ${{ inputs.commit }}
           **Build date:** $(date -u +%Y-%m-%d)
+
+          **Platform status:**
+          - Windows: ${WIN_STATUS}
+          - Linux: ${LIN_STATUS}
+          - macOS: ${MAC_STATUS}
 
           See manifest.json for available artifacts."
 
@@ -226,11 +328,12 @@ jobs:
             --prerelease
 
           # Upload all artifacts
-          find artifacts -name "*.tar.gz" -exec gh release upload "$RELEASE_TAG" {} \;
+          find artifacts -name "*.tar.gz" -exec gh release upload "$RELEASE_TAG" {} \; 2>/dev/null || true
           gh release upload "$RELEASE_TAG" manifest.json
 
+  # ============ SUMMARY ============
   summary:
-    needs: [build-host-windows, build-host-linux, build-host-macos, build-cross-windows, build-cross-linux, build-cross-macos, run-tests, create-release]
+    needs: [gate-windows, gate-linux, gate-macos, create-release]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -238,13 +341,10 @@ jobs:
         run: |
           echo "# FPC ${{ inputs.version }} Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Windows Host | ${{ needs.build-host-windows.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Linux Host | ${{ needs.build-host-linux.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| macOS Host | ${{ needs.build-host-macos.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Windows Cross | ${{ needs.build-cross-windows.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Linux Cross | ${{ needs.build-cross-linux.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| macOS Cross | ${{ needs.build-cross-macos.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Tests | ${{ needs.run-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | Included in Release |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|---------------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Windows | ${{ needs.gate-windows.outputs.include }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Linux | ${{ needs.gate-linux.outputs.include }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| macOS | ${{ needs.gate-macos.outputs.include }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Release | ${{ needs.create-release.result }} |" >> $GITHUB_STEP_SUMMARY
