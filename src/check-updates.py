@@ -97,7 +97,7 @@ def main():
                   file=sys.stderr)
             versions_to_build.append({
                 'name': version_name,
-                'branch': branch,
+                'branch': ref,
                 'bootstrap_fpc': version['bootstrap_fpc'],
                 'run_tests': str(version.get('run_tests', False)).lower(),
                 'commit': current_sha,
