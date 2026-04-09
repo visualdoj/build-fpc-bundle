@@ -3,7 +3,6 @@ name: Auto Build All Bundles
 # To use this workflow the BUILD_TOKEN secret should be configured
 
 on: 
-  push:
   schedule:
     - cron: '0 5 * * *'
 jobs:
