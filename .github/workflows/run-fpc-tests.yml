@@ -50,19 +50,30 @@ jobs:
         run: |
           echo "${{ github.workspace }}/fpc/installed/bin/i386-win32" >> $GITHUB_PATH
 
+      - name: Determine FPC path
+        id: fpc_path
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            FPC_PATH="${{ github.workspace }}/fpc/installed/bin/i386-win32/fpc.exe"
+          else
+            FPC_PATH="${{ github.workspace }}/fpc/installed/bin/fpc"
+          fi
+          echo "fpc=$FPC_PATH" >> $GITHUB_OUTPUT
+          echo "Using FPC at: $FPC_PATH"
+          ls -la "$FPC_PATH" || echo "WARNING: FPC not found at expected path"
+
       - name: Verify FPC installation
         run: fpc -i
 
       - name: Run compiler tests
         working-directory: ${{ github.workspace }}/fpc/src/tests
         shell: bash
-        continue-on-error: true
         run: |
-          # Run a subset of tests (full test suite takes too long)
           make clean
-          make digest TEST_FPC="${{ github.workspace }}/fpc/installed/bin/fpc" \
+          make digest TEST_FPC="${{ steps.fpc_path.outputs.fpc }}" \
             TEST_OUTPUTDIR="${{ github.workspace }}/test-output" \
-            FULL=1 || true
+            FULL=1
 
       - name: Generate test report
         if: always()

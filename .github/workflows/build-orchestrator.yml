@@ -180,8 +180,11 @@ jobs:
     secrets: inherit
 
   create-release:
-    needs: [prepare, build-host-windows, build-host-linux, build-host-macos, build-cross-windows, build-cross-linux, build-cross-macos]
-    if: always() && (needs.build-host-windows.result == 'success' || needs.build-host-linux.result == 'success' || needs.build-host-macos.result == 'success')
+    needs: [prepare, build-host-windows, build-host-linux, build-host-macos, build-cross-windows, build-cross-linux, build-cross-macos, run-tests]
+    if: |
+      always() &&
+      (needs.build-host-windows.result == 'success' || needs.build-host-linux.result == 'success' || needs.build-host-macos.result == 'success') &&
+      (needs.run-tests.result == 'success' || needs.run-tests.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

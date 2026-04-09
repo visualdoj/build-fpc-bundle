@@ -74,6 +74,8 @@ jobs:
       - name: Install FPC (setup-fpc action)
         if: inputs.bootstrap_fpc != 'system'
         uses: visualdoj/setup-fpc@main
+        with:
+          version: ${{ inputs.bootstrap_fpc }}
 
       - name: Print FPC version
         run: fpc -i
