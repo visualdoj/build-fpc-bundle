@@ -61,7 +61,7 @@
       "priority": 12,
       "status": "legacy",
       "run_tests": true,
-      "enabled": false
+      "enabled": true
     },
     {
       "name": "2.2.4",
@@ -70,7 +70,7 @@
       "priority": 13,
       "status": "legacy",
       "run_tests": true,
-      "enabled": true
+      "enabled": false
     }
   ],
   "gitlab_repo": "https://gitlab.com/freepascal.org/fpc/source.git",
