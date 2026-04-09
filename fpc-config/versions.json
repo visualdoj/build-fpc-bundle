@@ -34,7 +34,7 @@
       "priority": 4,
       "status": "stable",
       "run_tests": true,
-      "enabled": false
+      "enabled": true
     },
     {
       "name": "3.0.4",
@@ -43,7 +43,7 @@
       "priority": 10,
       "status": "legacy",
       "run_tests": true,
-      "enabled": true
+      "enabled": false
     },
     {
       "name": "2.6.4",
