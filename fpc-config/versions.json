@@ -30,7 +30,7 @@
     {
       "name": "3.2.2",
       "branch": "release_3_2_0",
-      "bootstrap_fpc": "3.2.0",
+      "bootstrap_fpc": "3.0.4",
       "priority": 4,
       "status": "stable",
       "run_tests": true,
@@ -39,7 +39,7 @@
     {
       "name": "3.0.4",
       "branch": "svn/fixes_3_0",
-      "bootstrap_fpc": "3.0.0",
+      "bootstrap_fpc": "2.6.4",
       "priority": 10,
       "status": "legacy",
       "run_tests": true,
@@ -48,7 +48,7 @@
     {
       "name": "2.6.4",
       "branch": "svn/fixes_2_6",
-      "bootstrap_fpc": "2.6.0",
+      "bootstrap_fpc": "2.4.4",
       "priority": 11,
       "status": "legacy",
       "run_tests": true,
@@ -57,7 +57,7 @@
     {
       "name": "2.4.4",
       "branch": "svn/fixes_2_4",
-      "bootstrap_fpc": "2.4.0",
+      "bootstrap_fpc": "2.2.4",
       "priority": 12,
       "status": "legacy",
       "run_tests": true,
@@ -70,7 +70,8 @@
       "priority": 13,
       "status": "legacy",
       "run_tests": true,
-      "enabled": false
+      "enabled": false,
+      "note": "Bootstrap requires external FPC 2.2.0 from SourceForge"
     }
   ],
   "gitlab_repo": "https://gitlab.com/freepascal.org/fpc/source.git",
