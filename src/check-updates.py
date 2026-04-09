@@ -9,12 +9,15 @@ import os
 import sys
 import urllib.request
 import urllib.error
+import urllib.parse
 from datetime import datetime
 
 
 def get_gitlab_branch_commit(api_base: str, branch: str) -> dict:
     """Fetch the latest commit info for a branch from GitLab API."""
-    url = f"{api_base}/repository/branches/{branch}"
+    # URL-encode branch name (e.g., "svn/fixes_2_2" -> "svn%2Ffixes_2_2")
+    encoded_branch = urllib.parse.quote(branch, safe='')
+    url = f"{api_base}/repository/branches/{encoded_branch}"
     try:
         with urllib.request.urlopen(url, timeout=30) as response:
             data = json.loads(response.read().decode('utf-8'))
