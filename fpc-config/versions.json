@@ -57,7 +57,7 @@
     {
       "name": "2.4.4",
       "branch": "svn/fixes_2_4",
-      "bootstrap_fpc": "2.2.4",
+      "bootstrap_fpc": "2.4.0",
       "priority": 12,
       "status": "legacy",
       "run_tests": true,
