@@ -51,6 +51,10 @@ jobs:
           esac
           echo "os_short=$OS_SHORT" >> $GITHUB_OUTPUT
           echo "bundle_name=fpc-${{ inputs.version }}-$OS_SHORT" >> $GITHUB_OUTPUT
+          # Convert Windows backslashes to forward slashes for bash compatibility
+          WORKSPACE="${{ github.workspace }}"
+          WORKSPACE="${WORKSPACE//\\//}"
+          echo "workspace=$WORKSPACE" >> $GITHUB_OUTPUT
 
       - name: Check out
         uses: actions/checkout@v4
@@ -78,35 +82,38 @@ jobs:
           version: ${{ inputs.bootstrap_fpc }}
 
       - name: Print FPC version
+        shell: bash
         run: fpc -i
 
       - name: Get FPC sources
-        working-directory: ${{ github.workspace }}
+        shell: bash
         run: git clone --branch "${{ inputs.branch }}" --depth 1 "${{ inputs.git_url }}" fpc_src
 
       - name: Get commit info
         id: commit
-        working-directory: ${{ github.workspace }}/fpc_src
+        working-directory: fpc_src
         shell: bash
         run: |
           echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
           echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Copy FPC source
-        working-directory: ${{ github.workspace }}/fpc_src
-        run: git checkout-index --prefix="${{ github.workspace }}/bundle/src/" -a
+        working-directory: fpc_src
+        shell: bash
+        run: git checkout-index --prefix="${{ steps.vars.outputs.workspace }}/bundle/src/" -a
 
       - name: Copy binutils (Windows)
         if: runner.os == 'Windows'
-        working-directory: ${{ github.workspace }}
+        shell: bash
         run: |
           mkdir -p bundle/installed/bin
           git clone --depth 1 "https://gitlab.com/freepascal.org/fpc/binaries.git" fpc-binaries
-          cd fpc-binaries && git checkout-index --prefix="${{ github.workspace }}/bundle/installed/bin/" -a
+          cd fpc-binaries && git checkout-index --prefix="${{ steps.vars.outputs.workspace }}/bundle/installed/bin/" -a
 
       - name: Build FPC
-        working-directory: ${{ github.workspace }}/fpc_src
-        run: make build install OPT="${{ inputs.fpc_opt }}" PREFIX="${{ github.workspace }}/bundle/installed"
+        working-directory: fpc_src
+        shell: bash
+        run: make build install OPT="${{ inputs.fpc_opt }}" PREFIX="${{ steps.vars.outputs.workspace }}/bundle/installed"
 
       - name: Copy GNU tools (Windows)
         if: runner.os == 'Windows'
@@ -117,18 +124,19 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          "${{ github.workspace }}/bundle/installed/bin/i386-win32/fpcmkcfg.exe" \
+          "${{ steps.vars.outputs.workspace }}/bundle/installed/bin/i386-win32/fpcmkcfg.exe" \
             -d basepath='$FPC_INSTALLED_DIR$' \
-            -o "${{ github.workspace }}/bundle/fpc.cfg"
+            -o "${{ steps.vars.outputs.workspace }}/bundle/fpc.cfg"
 
       - name: Generate fpc.cfg (non-Windows)
         if: runner.os != 'Windows'
+        shell: bash
         run: |
           fpcmkcfg -d basepath="\$FPC_INSTALLED_DIR\$/lib/fpc/\$FPCVERSION" \
-            -o "${{ github.workspace }}/bundle/fpc.cfg"
+            -o "${{ steps.vars.outputs.workspace }}/bundle/fpc.cfg"
 
       - name: Generate info
-        working-directory: ${{ github.workspace }}/bundle
+        working-directory: bundle
         shell: bash
         run: |
           mkdir -p info
@@ -138,12 +146,13 @@ jobs:
           date -u +%Y-%m-%dT%H:%M:%SZ > info/build-date.txt
 
       - name: Create archive
-        working-directory: ${{ github.workspace }}/bundle
+        working-directory: bundle
+        shell: bash
         run: tar -czvf "../${{ steps.vars.outputs.bundle_name }}.tar.gz" *
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.vars.outputs.bundle_name }}
-          path: ${{ github.workspace }}/${{ steps.vars.outputs.bundle_name }}.tar.gz
+          path: ${{ steps.vars.outputs.workspace }}/${{ steps.vars.outputs.bundle_name }}.tar.gz
           retention-days: 7
