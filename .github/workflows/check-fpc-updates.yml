@@ -71,6 +71,7 @@ jobs:
             gh release create "${{ env.TRACKER_TAG }}" \
               --title "Commit Tracker" \
               --notes "Automated commit tracking for FPC builds. Do not delete." \
+              --prerelease \
               updated-tracker.json
           else
             gh release upload "${{ env.TRACKER_TAG }}" \
