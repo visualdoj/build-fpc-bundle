@@ -1,0 +1,149 @@
+name: Build FPC Host Compiler
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        description: 'GitHub runner OS'
+        type: string
+        required: true
+      version:
+        description: 'FPC version being built'
+        type: string
+        required: true
+      branch:
+        description: 'Git branch to build from'
+        type: string
+        required: true
+      bootstrap_fpc:
+        description: 'Bootstrap FPC version'
+        type: string
+        required: false
+        default: '3.2.2'
+      fpc_opt:
+        description: 'Additional FPC options'
+        type: string
+        required: false
+        default: ''
+      git_url:
+        description: 'Git repository URL'
+        type: string
+        required: false
+        default: 'https://gitlab.com/freepascal.org/fpc/source.git'
+
+jobs:
+  build:
+    name: Build Host (${{ inputs.os }})
+    runs-on: ${{ inputs.os }}
+    outputs:
+      bundle_name: ${{ steps.vars.outputs.bundle_name }}
+    steps:
+      - name: Set variables
+        id: vars
+        shell: bash
+        run: |
+          OS_NAME="${{ inputs.os }}"
+          case "$OS_NAME" in
+            windows-*) OS_SHORT="windows" ;;
+            ubuntu-*)  OS_SHORT="linux" ;;
+            macos-*)   OS_SHORT="macos" ;;
+            *)         OS_SHORT="$OS_NAME" ;;
+          esac
+          echo "os_short=$OS_SHORT" >> $GITHUB_OUTPUT
+          echo "bundle_name=fpc-${{ inputs.version }}-$OS_SHORT" >> $GITHUB_OUTPUT
+
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Install FPC (apt)
+        if: runner.os == 'Linux' && inputs.bootstrap_fpc == 'system'
+        run: sudo apt-get install -y fpc
+
+      - name: Install FPC (choco)
+        if: runner.os == 'Windows' && inputs.bootstrap_fpc == 'system'
+        run: |
+          choco install freepascal --yes
+          echo "C:\tools\freepascal\bin\i386-win32" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Install FPC (brew)
+        if: runner.os == 'macOS' && inputs.bootstrap_fpc == 'system'
+        run: |
+          brew update
+          brew install fpc
+
+      - name: Install FPC (setup-fpc action)
+        if: inputs.bootstrap_fpc != 'system'
+        uses: visualdoj/setup-fpc@main
+        with:
+          version: ${{ inputs.bootstrap_fpc }}
+
+      - name: Print FPC version
+        run: fpc -i
+
+      - name: Get FPC sources
+        working-directory: ${{ github.workspace }}
+        run: git clone --branch "${{ inputs.branch }}" --depth 1 "${{ inputs.git_url }}" fpc_src
+
+      - name: Get commit info
+        id: commit
+        working-directory: ${{ github.workspace }}/fpc_src
+        shell: bash
+        run: |
+          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Copy FPC source
+        working-directory: ${{ github.workspace }}/fpc_src
+        run: git checkout-index --prefix="${{ github.workspace }}/bundle/src/" -a
+
+      - name: Copy binutils (Windows)
+        if: runner.os == 'Windows'
+        working-directory: ${{ github.workspace }}
+        run: |
+          mkdir -p bundle/installed/bin
+          git clone --depth 1 "https://gitlab.com/freepascal.org/fpc/binaries.git" fpc-binaries
+          cd fpc-binaries && git checkout-index --prefix="${{ github.workspace }}/bundle/installed/bin/" -a
+
+      - name: Build FPC
+        working-directory: ${{ github.workspace }}/fpc_src
+        run: make build install OPT="${{ inputs.fpc_opt }}" PREFIX="${{ github.workspace }}/bundle/installed"
+
+      - name: Copy GNU tools (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: cp -r bin/i386-win32/* bundle/installed/bin/i386-win32/
+
+      - name: Generate fpc.cfg (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          "${{ github.workspace }}/bundle/installed/bin/i386-win32/fpcmkcfg.exe" \
+            -d basepath='$FPC_INSTALLED_DIR$' \
+            -o "${{ github.workspace }}/bundle/fpc.cfg"
+
+      - name: Generate fpc.cfg (non-Windows)
+        if: runner.os != 'Windows'
+        run: |
+          fpcmkcfg -d basepath="\$FPC_INSTALLED_DIR\$/lib/fpc/\$FPCVERSION" \
+            -o "${{ github.workspace }}/bundle/fpc.cfg"
+
+      - name: Generate info
+        working-directory: ${{ github.workspace }}/bundle
+        shell: bash
+        run: |
+          mkdir -p info
+          fpc -i > info/fpc-version.txt
+          echo "${{ steps.commit.outputs.sha }}" > info/commit.txt
+          echo "${{ inputs.branch }}" > info/branch.txt
+          date -u +%Y-%m-%dT%H:%M:%SZ > info/build-date.txt
+
+      - name: Create archive
+        working-directory: ${{ github.workspace }}/bundle
+        run: tar -czvf "../${{ steps.vars.outputs.bundle_name }}.tar.gz" *
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.vars.outputs.bundle_name }}
+          path: ${{ github.workspace }}/${{ steps.vars.outputs.bundle_name }}.tar.gz
+          retention-days: 7

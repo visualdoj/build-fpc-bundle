@@ -1,0 +1,119 @@
+name: Scheduled Builds
+
+# Tiered scheduled builds with manual dispatch option
+
+on:
+  workflow_dispatch:
+    inputs:
+      tier:
+        description: 'Tier of cross-compilers to build'
+        required: false
+        default: 'tier1,tier2'
+        type: choice
+        options:
+          - tier1
+          - tier1,tier2
+          - tier1,tier2,tier3
+          - none
+      versions:
+        description: 'Versions to build (comma-separated, or "all")'
+        required: false
+        default: 'all'
+        type: string
+      run_tests:
+        description: 'Run test suite for main builds'
+        required: false
+        default: true
+        type: boolean
+  schedule:
+    # Daily build: tier1 + tier2
+    - cron: '0 5 * * 1-5'
+    # Weekly full build: all tiers (Sunday)
+    - cron: '0 5 * * 0'
+
+jobs:
+  determine-config:
+    runs-on: ubuntu-latest
+    outputs:
+      tier: ${{ steps.config.outputs.tier }}
+      versions: ${{ steps.config.outputs.versions }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine build configuration
+        id: config
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tier=${{ inputs.tier }}" >> $GITHUB_OUTPUT
+            echo "versions=${{ inputs.versions }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event.schedule }}" = "0 5 * * 0" ]; then
+            # Sunday: full build
+            echo "tier=tier1,tier2,tier3" >> $GITHUB_OUTPUT
+            echo "versions=all" >> $GITHUB_OUTPUT
+          else
+            # Weekday: tier1 + tier2
+            echo "tier=tier1,tier2" >> $GITHUB_OUTPUT
+            echo "versions=all" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Load versions config
+        id: versions
+        run: |
+          python3 -c "
+          import json
+          with open('fpc-config/versions.json') as f:
+              config = json.load(f)
+          versions = [v for v in config['versions'] if v.get('enabled', True)]
+          print('versions_json=' + json.dumps(versions))
+          " >> $GITHUB_OUTPUT
+
+  build-3-2-3:
+    needs: determine-config
+    if: contains(needs.determine-config.outputs.versions, 'all') || contains(needs.determine-config.outputs.versions, '3.2.3')
+    uses: ./.github/workflows/build-orchestrator.yml
+    with:
+      version: '3.2.3'
+      branch: 'fixes_3_2'
+      bootstrap_fpc: '3.2.2'
+      run_tests: 'true'
+      tier: ${{ needs.determine-config.outputs.tier }}
+    secrets: inherit
+
+  build-3-3-1:
+    needs: determine-config
+    if: contains(needs.determine-config.outputs.versions, 'all') || contains(needs.determine-config.outputs.versions, '3.3.1')
+    uses: ./.github/workflows/build-orchestrator.yml
+    with:
+      version: '3.3.1'
+      branch: 'main'
+      bootstrap_fpc: '3.2.2'
+      run_tests: 'true'
+      tier: ${{ needs.determine-config.outputs.tier }}
+    secrets: inherit
+
+  build-3-2-2:
+    needs: determine-config
+    if: contains(needs.determine-config.outputs.versions, 'all') || contains(needs.determine-config.outputs.versions, '3.2.2')
+    uses: ./.github/workflows/build-orchestrator.yml
+    with:
+      version: '3.2.2'
+      branch: 'release_3_2_0'
+      bootstrap_fpc: '3.2.0'
+      run_tests: 'false'
+      tier: ${{ needs.determine-config.outputs.tier }}
+    secrets: inherit
+
+  summary:
+    if: always()
+    needs: [build-3-2-2, build-3-2-3, build-3-3-1]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Summary
+        run: |
+          echo "# Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Version | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 3.2.2 | ${{ needs.build-3-2-2.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 3.2.3 | ${{ needs.build-3-2-3.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 3.3.1 | ${{ needs.build-3-3-1.result }} |" >> $GITHUB_STEP_SUMMARY

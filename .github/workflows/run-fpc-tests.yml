@@ -1,0 +1,88 @@
+name: Run FPC Tests
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        description: 'GitHub runner OS'
+        type: string
+        required: true
+      version:
+        description: 'FPC version being tested'
+        type: string
+        required: true
+      host_bundle:
+        description: 'Name of host bundle artifact'
+        type: string
+        required: true
+
+jobs:
+  test:
+    name: Test (${{ inputs.os }})
+    runs-on: ${{ inputs.os }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Download host bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.host_bundle }}
+          path: ${{ github.workspace }}
+
+      - name: Extract host bundle
+        working-directory: ${{ github.workspace }}
+        shell: bash
+        run: |
+          mkdir -p fpc
+          cd fpc && tar -xzf "../${{ inputs.host_bundle }}.tar.gz"
+
+      - name: Add FPC to PATH (non-Windows)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          echo "${{ github.workspace }}/fpc/installed/bin" >> $GITHUB_PATH
+          echo "${{ github.workspace }}/fpc/installed/lib/fpc/${{ inputs.version }}" >> $GITHUB_PATH
+
+      - name: Add FPC to PATH (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          echo "${{ github.workspace }}/fpc/installed/bin/i386-win32" >> $GITHUB_PATH
+
+      - name: Verify FPC installation
+        run: fpc -i
+
+      - name: Run compiler tests
+        working-directory: ${{ github.workspace }}/fpc/src/tests
+        shell: bash
+        continue-on-error: true
+        run: |
+          # Run a subset of tests (full test suite takes too long)
+          make clean
+          make digest TEST_FPC="${{ github.workspace }}/fpc/installed/bin/fpc" \
+            TEST_OUTPUTDIR="${{ github.workspace }}/test-output" \
+            FULL=1 || true
+
+      - name: Generate test report
+        if: always()
+        shell: bash
+        run: |
+          echo "## Test Results for ${{ inputs.os }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f "${{ github.workspace }}/test-output/log" ]; then
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -100 "${{ github.workspace }}/test-output/log" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No test log found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ inputs.os }}
+          path: ${{ github.workspace }}/test-output/
+          retention-days: 7
+          if-no-files-found: ignore

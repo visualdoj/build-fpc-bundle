@@ -1,0 +1,247 @@
+name: Build Orchestrator
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'FPC version to build (e.g., 3.2.3)'
+        required: true
+        type: string
+      branch:
+        description: 'Git branch to build from'
+        required: true
+        type: string
+      bootstrap_fpc:
+        description: 'Bootstrap FPC version'
+        required: false
+        default: '3.2.2'
+        type: string
+      run_tests:
+        description: 'Run test suite'
+        required: false
+        default: 'false'
+        type: string
+      commit:
+        description: 'Specific commit SHA (for release tagging)'
+        required: false
+        default: ''
+        type: string
+      tier:
+        description: 'Which tier of cross-compilers to build'
+        required: false
+        default: 'tier1'
+        type: choice
+        options:
+          - tier1
+          - tier1,tier2
+          - tier1,tier2,tier3
+          - none
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: true
+      branch:
+        type: string
+        required: true
+      bootstrap_fpc:
+        type: string
+        required: false
+        default: '3.2.2'
+      run_tests:
+        type: string
+        required: false
+        default: 'false'
+      commit:
+        type: string
+        required: false
+        default: ''
+      tier:
+        type: string
+        required: false
+        default: 'tier1'
+
+concurrency:
+  group: build-fpc-${{ inputs.version }}
+  cancel-in-progress: false
+
+env:
+  RELEASE_TAG: v${{ inputs.version }}-latest
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      host_matrix: ${{ steps.matrix.outputs.host_matrix }}
+      cross_matrix_windows: ${{ steps.matrix.outputs.cross_matrix_windows }}
+      cross_matrix_linux: ${{ steps.matrix.outputs.cross_matrix_linux }}
+      cross_matrix_macos: ${{ steps.matrix.outputs.cross_matrix_macos }}
+      release_tag: ${{ steps.matrix.outputs.release_tag }}
+      build_date: ${{ steps.matrix.outputs.build_date }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Generate matrices
+        id: matrix
+        run: |
+          python3 src/generate-build-matrix.py \
+            --targets-config fpc-config/targets.json \
+            --tier "${{ inputs.tier }}" \
+            --version "${{ inputs.version }}"
+
+  build-host-windows:
+    needs: prepare
+    uses: ./.github/workflows/build-fpc-host.yml
+    with:
+      os: windows-latest
+      version: ${{ inputs.version }}
+      branch: ${{ inputs.branch }}
+      bootstrap_fpc: ${{ inputs.bootstrap_fpc }}
+      fpc_opt: ''
+    secrets: inherit
+
+  build-host-linux:
+    needs: prepare
+    uses: ./.github/workflows/build-fpc-host.yml
+    with:
+      os: ubuntu-latest
+      version: ${{ inputs.version }}
+      branch: ${{ inputs.branch }}
+      bootstrap_fpc: ${{ inputs.bootstrap_fpc }}
+      fpc_opt: ''
+    secrets: inherit
+
+  build-host-macos:
+    needs: prepare
+    uses: ./.github/workflows/build-fpc-host.yml
+    with:
+      os: macos-latest
+      version: ${{ inputs.version }}
+      branch: ${{ inputs.branch }}
+      bootstrap_fpc: ${{ inputs.bootstrap_fpc }}
+      fpc_opt: '-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/'
+    secrets: inherit
+
+  build-cross-windows:
+    needs: [prepare, build-host-windows]
+    if: inputs.tier != 'none' && needs.prepare.outputs.cross_matrix_windows != '[]'
+    uses: ./.github/workflows/build-fpc-cross.yml
+    with:
+      os: windows-latest
+      version: ${{ inputs.version }}
+      host_bundle: fpc-${{ inputs.version }}-windows
+      targets: ${{ needs.prepare.outputs.cross_matrix_windows }}
+    secrets: inherit
+
+  build-cross-linux:
+    needs: [prepare, build-host-linux]
+    if: inputs.tier != 'none' && needs.prepare.outputs.cross_matrix_linux != '[]'
+    uses: ./.github/workflows/build-fpc-cross.yml
+    with:
+      os: ubuntu-latest
+      version: ${{ inputs.version }}
+      host_bundle: fpc-${{ inputs.version }}-linux
+      targets: ${{ needs.prepare.outputs.cross_matrix_linux }}
+    secrets: inherit
+
+  build-cross-macos:
+    needs: [prepare, build-host-macos]
+    if: inputs.tier != 'none' && needs.prepare.outputs.cross_matrix_macos != '[]'
+    uses: ./.github/workflows/build-fpc-cross.yml
+    with:
+      os: macos-latest
+      version: ${{ inputs.version }}
+      host_bundle: fpc-${{ inputs.version }}-macos
+      targets: ${{ needs.prepare.outputs.cross_matrix_macos }}
+    secrets: inherit
+
+  run-tests:
+    needs: [build-host-windows, build-host-linux, build-host-macos]
+    if: inputs.run_tests == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: linux
+          - os: windows-latest
+            name: windows
+          - os: macos-latest
+            name: macos
+    uses: ./.github/workflows/run-fpc-tests.yml
+    with:
+      os: ${{ matrix.os }}
+      version: ${{ inputs.version }}
+      host_bundle: fpc-${{ inputs.version }}-${{ matrix.name }}
+    secrets: inherit
+
+  create-release:
+    needs: [prepare, build-host-windows, build-host-linux, build-host-macos, build-cross-windows, build-cross-linux, build-cross-macos]
+    if: always() && (needs.build-host-windows.result == 'success' || needs.build-host-linux.result == 'success' || needs.build-host-macos.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Generate release manifest
+        run: |
+          python3 src/generate-manifest.py \
+            --version "${{ inputs.version }}" \
+            --branch "${{ inputs.branch }}" \
+            --commit "${{ inputs.commit }}" \
+            --artifacts-dir artifacts \
+            --output manifest.json
+
+      - name: Create/Update Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_TAG="${{ env.RELEASE_TAG }}"
+          RELEASE_TITLE="FPC ${{ inputs.version }} (latest build)"
+          RELEASE_NOTES="Automated build of FPC ${{ inputs.version }} from branch ${{ inputs.branch }}
+
+          **Commit:** ${{ inputs.commit }}
+          **Build date:** $(date -u +%Y-%m-%d)
+
+          See manifest.json for available artifacts."
+
+          # Delete existing release if present
+          gh release delete "$RELEASE_TAG" --yes 2>/dev/null || true
+
+          # Create new release
+          gh release create "$RELEASE_TAG" \
+            --title "$RELEASE_TITLE" \
+            --notes "$RELEASE_NOTES" \
+            --prerelease
+
+          # Upload all artifacts
+          find artifacts -name "*.tar.gz" -exec gh release upload "$RELEASE_TAG" {} \;
+          gh release upload "$RELEASE_TAG" manifest.json
+
+  summary:
+    needs: [build-host-windows, build-host-linux, build-host-macos, build-cross-windows, build-cross-linux, build-cross-macos, run-tests, create-release]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Summary
+        run: |
+          echo "# FPC ${{ inputs.version }} Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Windows Host | ${{ needs.build-host-windows.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Linux Host | ${{ needs.build-host-linux.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| macOS Host | ${{ needs.build-host-macos.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Windows Cross | ${{ needs.build-cross-windows.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Linux Cross | ${{ needs.build-cross-linux.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| macOS Cross | ${{ needs.build-cross-macos.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests | ${{ needs.run-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Release | ${{ needs.create-release.result }} |" >> $GITHUB_STEP_SUMMARY

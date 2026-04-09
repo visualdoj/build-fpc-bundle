@@ -1,0 +1,33 @@
+{
+  "versions": [
+    {
+      "name": "3.2.2",
+      "branch": "release_3_2_0",
+      "bootstrap_fpc": "3.2.0",
+      "priority": 1,
+      "status": "stable",
+      "run_tests": false,
+      "enabled": true
+    },
+    {
+      "name": "3.2.3",
+      "branch": "fixes_3_2",
+      "bootstrap_fpc": "3.2.2",
+      "priority": 2,
+      "status": "stable",
+      "run_tests": true,
+      "enabled": true
+    },
+    {
+      "name": "3.3.1",
+      "branch": "main",
+      "bootstrap_fpc": "3.2.2",
+      "priority": 3,
+      "status": "development",
+      "run_tests": true,
+      "enabled": true
+    }
+  ],
+  "gitlab_repo": "https://gitlab.com/freepascal.org/fpc/source.git",
+  "gitlab_api": "https://gitlab.com/api/v4/projects/freepascal.org%2Ffpc%2Fsource"
+}

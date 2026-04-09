@@ -1,0 +1,102 @@
+name: Check FPC Updates
+
+on:
+  schedule:
+    # Check every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: 'Force build even if no new commits'
+        required: false
+        default: 'false'
+        type: boolean
+      version_filter:
+        description: 'Only check specific version (leave empty for all)'
+        required: false
+        default: ''
+        type: string
+
+env:
+  TRACKER_TAG: commit-tracker
+  TRACKER_FILE: commit-tracker.json
+
+jobs:
+  check-updates:
+    runs-on: ubuntu-latest
+    outputs:
+      versions_to_build: ${{ steps.check.outputs.versions_to_build }}
+      has_updates: ${{ steps.check.outputs.has_updates }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download current commit tracker
+        id: download_tracker
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "${{ env.TRACKER_TAG }}" \
+            --pattern "${{ env.TRACKER_FILE }}" \
+            --output "${{ env.TRACKER_FILE }}" \
+            || echo "{}" > "${{ env.TRACKER_FILE }}"
+          cat "${{ env.TRACKER_FILE }}"
+
+      - name: Check for updates
+        id: check
+        env:
+          FORCE_BUILD: ${{ inputs.force_build }}
+          VERSION_FILTER: ${{ inputs.version_filter }}
+        run: |
+          python3 src/check-updates.py \
+            --versions-config fpc-config/versions.json \
+            --tracker "${{ env.TRACKER_FILE }}" \
+            --output updated-tracker.json \
+            --force "$FORCE_BUILD" \
+            --version-filter "$VERSION_FILTER"
+
+      - name: Upload updated tracker
+        if: steps.check.outputs.has_updates == 'true' || inputs.force_build == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Create or update the tracker release
+          if ! gh release view "${{ env.TRACKER_TAG }}" &>/dev/null; then
+            gh release create "${{ env.TRACKER_TAG }}" \
+              --title "Commit Tracker" \
+              --notes "Automated commit tracking for FPC builds. Do not delete." \
+              updated-tracker.json
+          else
+            gh release upload "${{ env.TRACKER_TAG }}" \
+              updated-tracker.json \
+              --clobber
+          fi
+
+  trigger-builds:
+    needs: check-updates
+    if: needs.check-updates.outputs.has_updates == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: ${{ fromJSON(needs.check-updates.outputs.versions_to_build) }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Trigger build for ${{ matrix.version.name }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run build-orchestrator.yml \
+            -f version="${{ matrix.version.name }}" \
+            -f branch="${{ matrix.version.branch }}" \
+            -f bootstrap_fpc="${{ matrix.version.bootstrap_fpc }}" \
+            -f run_tests="${{ matrix.version.run_tests }}" \
+            -f commit="${{ matrix.version.commit }}" \
+            -f tier="tier1"

@@ -1,0 +1,149 @@
+name: Build FPC Cross Compilers
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        description: 'GitHub runner OS'
+        type: string
+        required: true
+      version:
+        description: 'FPC version being built'
+        type: string
+        required: true
+      host_bundle:
+        description: 'Name of host bundle artifact'
+        type: string
+        required: true
+      targets:
+        description: 'JSON array of targets to build'
+        type: string
+        required: true
+
+jobs:
+  build-cross:
+    name: Cross (${{ matrix.cpu }}-${{ matrix.os }})
+    runs-on: ${{ inputs.os }}
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(inputs.targets) }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Download host bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.host_bundle }}
+          path: ${{ github.workspace }}
+
+      - name: Extract host bundle
+        working-directory: ${{ github.workspace }}
+        shell: bash
+        run: |
+          mkdir -p fpc
+          cd fpc && tar -xzf "../${{ inputs.host_bundle }}.tar.gz"
+
+      - name: Add FPC to PATH (non-Windows)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          echo "${{ github.workspace }}/fpc/installed/bin" >> $GITHUB_PATH
+          echo "${{ github.workspace }}/fpc/installed/lib/fpc/${{ inputs.version }}" >> $GITHUB_PATH
+
+      - name: Setup PATH file (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          echo -n "${{ github.workspace }}/fpc/installed/bin/i386-win32;${{ github.workspace }}/fpc/installed/bin/i386-win32" > PATH.txt
+
+      - name: Copy cross tools
+        if: runner.os != 'Windows'
+        shell: bash
+        run: cp -r src/cross/* "${{ github.workspace }}/fpc/installed/bin/" 2>/dev/null || true
+
+      - name: Create cross bundle directory
+        shell: bash
+        run: |
+          mkdir -p bundle-cross/installed
+          mkdir -p bundle-cross/info
+
+      - name: Setup cross prerequisites
+        uses: ./.github/actions/setup-cross-prerequisites
+        with:
+          target_cpu: ${{ matrix.cpu }}
+          target_os: ${{ matrix.os }}
+          opt: ${{ matrix.opt }}
+          crossopt: ${{ matrix.crossopt }}
+          make_opt: ${{ matrix.make_opt }}
+
+      - name: Build cross compiler (Windows)
+        if: runner.os == 'Windows'
+        working-directory: ${{ github.workspace }}/fpc/src
+        shell: bash
+        run: |
+          PATH_VAL=$(cat "${{ github.workspace }}/PATH.txt")
+          "${{ github.workspace }}/fpc/installed/bin/i386-win32/make.exe" \
+            clean all crossinstall \
+            CPU_TARGET=${{ matrix.cpu }} \
+            OS_TARGET=${{ matrix.os }} \
+            PREFIX="${{ github.workspace }}/bundle-cross/installed" \
+            CROSSOPT="${{ matrix.crossopt }}" \
+            OPT="${{ matrix.opt }}" \
+            PATH="$PATH_VAL" \
+            ${{ matrix.make_opt }}
+
+      - name: Build cross compiler (non-Windows)
+        if: runner.os != 'Windows'
+        working-directory: ${{ github.workspace }}/fpc/src
+        shell: bash
+        run: |
+          make clean all crossinstall \
+            CPU_TARGET=${{ matrix.cpu }} \
+            OS_TARGET=${{ matrix.os }} \
+            PREFIX="${{ github.workspace }}/bundle-cross/installed" \
+            CROSSOPT="${{ matrix.crossopt }}" \
+            OPT="${{ matrix.opt }}" \
+            ${{ matrix.make_opt }}
+
+      - name: Generate cross info
+        shell: bash
+        run: |
+          echo "${{ matrix.cpu }}-${{ matrix.os }}" > "${{ github.workspace }}/bundle-cross/info/cross-list.txt"
+
+      - name: Generate cross fpc.cfg
+        shell: bash
+        run: |
+          cat > "${{ github.workspace }}/bundle-cross/fpc.cfg" << 'EOF'
+          # ${{ matrix.cpu }}-${{ matrix.os }}
+          #IFDEF cpu${{ matrix.cpu }}
+          #IFDEF ${{ matrix.os }}
+          #ENDIF
+          #ENDIF
+          EOF
+
+      - name: Set artifact name
+        id: vars
+        shell: bash
+        run: |
+          OS_NAME="${{ inputs.os }}"
+          case "$OS_NAME" in
+            windows-*) OS_SHORT="windows" ;;
+            ubuntu-*)  OS_SHORT="linux" ;;
+            macos-*)   OS_SHORT="macos" ;;
+            *)         OS_SHORT="$OS_NAME" ;;
+          esac
+          echo "artifact_name=fpc-${{ inputs.version }}-$OS_SHORT-cross-${{ matrix.cpu }}-${{ matrix.os }}" >> $GITHUB_OUTPUT
+
+      - name: Create cross archive
+        working-directory: ${{ github.workspace }}/bundle-cross
+        run: tar -czvf "../${{ steps.vars.outputs.artifact_name }}.tar.gz" *
+
+      - name: Upload cross artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.vars.outputs.artifact_name }}
+          path: ${{ github.workspace }}/${{ steps.vars.outputs.artifact_name }}.tar.gz
+          retention-days: 7
