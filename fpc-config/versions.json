@@ -41,7 +41,7 @@
       "name": "3.2.0",
       "branch": "release_3_2_0",
       "ref_type": "tag",
-      "bootstrap_fpc": "3.0.4",
+      "bootstrap_fpc": "system",
       "priority": 5,
       "status": "stable",
       "run_tests": false,
