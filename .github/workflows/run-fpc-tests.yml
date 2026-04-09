@@ -21,6 +21,15 @@ jobs:
     name: Test (${{ inputs.os }})
     runs-on: ${{ inputs.os }}
     steps:
+      - name: Set variables
+        id: vars
+        shell: bash
+        run: |
+          # Convert Windows backslashes to forward slashes
+          WORKSPACE="${{ github.workspace }}"
+          WORKSPACE="${WORKSPACE//\\//}"
+          echo "workspace=$WORKSPACE" >> $GITHUB_OUTPUT
+
       - name: Check out
         uses: actions/checkout@v4
 
@@ -31,59 +40,74 @@ jobs:
           path: ${{ github.workspace }}
 
       - name: Extract host bundle
-        working-directory: ${{ github.workspace }}
         shell: bash
         run: |
           mkdir -p fpc
           cd fpc && tar -xzf "../${{ inputs.host_bundle }}.tar.gz"
 
+      - name: Debug - List bundle structure
+        shell: bash
+        run: |
+          echo "=== Bundle contents ==="
+          find fpc -type f -name "fpc*" -o -name "ppc*" 2>/dev/null | head -50
+          echo "=== installed/bin contents ==="
+          ls -la fpc/installed/bin/ 2>/dev/null || echo "fpc/installed/bin/ not found"
+          echo "=== installed/lib/fpc contents ==="
+          ls -la fpc/installed/lib/fpc/ 2>/dev/null || echo "fpc/installed/lib/fpc/ not found"
+
       - name: Add FPC to PATH (non-Windows)
         if: runner.os != 'Windows'
         shell: bash
         run: |
-          echo "${{ github.workspace }}/fpc/installed/bin" >> $GITHUB_PATH
-          echo "${{ github.workspace }}/fpc/installed/lib/fpc/${{ inputs.version }}" >> $GITHUB_PATH
+          echo "${{ steps.vars.outputs.workspace }}/fpc/installed/bin" >> $GITHUB_PATH
+          echo "${{ steps.vars.outputs.workspace }}/fpc/installed/lib/fpc/${{ inputs.version }}" >> $GITHUB_PATH
 
       - name: Add FPC to PATH (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          echo "${{ github.workspace }}/fpc/installed/bin/i386-win32" >> $GITHUB_PATH
+          echo "${{ steps.vars.outputs.workspace }}/fpc/installed/bin/i386-win32" >> $GITHUB_PATH
 
       - name: Determine FPC path
         id: fpc_path
         shell: bash
         run: |
+          WORKSPACE="${{ steps.vars.outputs.workspace }}"
           if [ "${{ runner.os }}" = "Windows" ]; then
-            FPC_PATH="${{ github.workspace }}/fpc/installed/bin/i386-win32/fpc.exe"
+            FPC_PATH="$WORKSPACE/fpc/installed/bin/i386-win32/fpc.exe"
           else
-            FPC_PATH="${{ github.workspace }}/fpc/installed/bin/fpc"
+            FPC_PATH="$WORKSPACE/fpc/installed/bin/fpc"
           fi
           echo "fpc=$FPC_PATH" >> $GITHUB_OUTPUT
           echo "Using FPC at: $FPC_PATH"
           ls -la "$FPC_PATH" || echo "WARNING: FPC not found at expected path"
 
       - name: Verify FPC installation
+        shell: bash
         run: fpc -i
 
       - name: Run compiler tests
-        working-directory: ${{ github.workspace }}/fpc/src/tests
+        working-directory: fpc/src/tests
         shell: bash
         run: |
+          WORKSPACE="${{ steps.vars.outputs.workspace }}"
+          FPC_PATH="${{ steps.fpc_path.outputs.fpc }}"
+          echo "TEST_FPC=$FPC_PATH"
           make clean
-          make digest TEST_FPC="${{ steps.fpc_path.outputs.fpc }}" \
-            TEST_OUTPUTDIR="${{ github.workspace }}/test-output" \
+          make digest TEST_FPC="$FPC_PATH" \
+            TEST_OUTPUTDIR="$WORKSPACE/test-output" \
             FULL=1
 
       - name: Generate test report
         if: always()
         shell: bash
         run: |
+          WORKSPACE="${{ steps.vars.outputs.workspace }}"
           echo "## Test Results for ${{ inputs.os }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ -f "${{ github.workspace }}/test-output/log" ]; then
+          if [ -f "$WORKSPACE/test-output/log" ]; then
             echo '```' >> $GITHUB_STEP_SUMMARY
-            tail -100 "${{ github.workspace }}/test-output/log" >> $GITHUB_STEP_SUMMARY
+            tail -100 "$WORKSPACE/test-output/log" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           else
             echo "No test log found" >> $GITHUB_STEP_SUMMARY
@@ -94,6 +118,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results-${{ inputs.os }}
-          path: ${{ github.workspace }}/test-output/
+          path: ${{ steps.vars.outputs.workspace }}/test-output/
           retention-days: 7
           if-no-files-found: ignore
