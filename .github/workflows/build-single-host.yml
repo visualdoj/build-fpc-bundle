@@ -1,0 +1,192 @@
+name: Build Single Host
+
+on:
+  workflow_dispatch:
+    inputs:
+      host:
+        description: 'Host platform to build'
+        required: true
+        type: choice
+        options:
+          - macos-latest
+          - macos-26-intel
+          - windows-latest
+          - ubuntu-latest
+      version:
+        description: 'FPC version (e.g., 3.2.3)'
+        required: true
+        type: string
+      branch:
+        description: 'Git branch to build from'
+        required: true
+        type: string
+      bootstrap_fpc:
+        description: 'Bootstrap FPC version'
+        required: false
+        default: '3.2.2'
+        type: string
+      run_tests:
+        description: 'Run test suite'
+        required: false
+        default: false
+        type: boolean
+      build_cross:
+        description: 'Build cross-compilers'
+        required: false
+        default: false
+        type: boolean
+      tier:
+        description: 'Cross-compiler tier (if build_cross enabled)'
+        required: false
+        default: 'tier1'
+        type: choice
+        options:
+          - tier1
+          - tier1,tier2
+          - tier1,tier2,tier3
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      os_short: ${{ steps.vars.outputs.os_short }}
+      os_display: ${{ steps.vars.outputs.os_display }}
+      fpc_opt: ${{ steps.vars.outputs.fpc_opt }}
+      cross_matrix: ${{ steps.matrix.outputs.cross_matrix }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set host variables
+        id: vars
+        run: |
+          HOST="${{ inputs.host }}"
+          case "$HOST" in
+            windows-latest)
+              echo "os_short=windows" >> $GITHUB_OUTPUT
+              echo "os_display=Windows" >> $GITHUB_OUTPUT
+              echo "fpc_opt=" >> $GITHUB_OUTPUT
+              ;;
+            ubuntu-latest)
+              echo "os_short=linux" >> $GITHUB_OUTPUT
+              echo "os_display=Linux" >> $GITHUB_OUTPUT
+              echo "fpc_opt=" >> $GITHUB_OUTPUT
+              ;;
+            macos-26-intel)
+              echo "os_short=macos" >> $GITHUB_OUTPUT
+              echo "os_display=macOS (x86_64)" >> $GITHUB_OUTPUT
+              echo "fpc_opt=-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/" >> $GITHUB_OUTPUT
+              ;;
+            macos-latest)
+              echo "os_short=arm64-macos" >> $GITHUB_OUTPUT
+              echo "os_display=macOS (arm64)" >> $GITHUB_OUTPUT
+              echo "fpc_opt=-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+      - name: Generate cross matrix
+        id: matrix
+        if: inputs.build_cross
+        run: |
+          pip install --quiet pyyaml
+          python3 << 'EOF'
+          import json
+          import os
+
+          with open('fpc-config/targets.json', 'r') as f:
+              config = json.load(f)
+
+          host = "${{ inputs.host }}"
+          tiers = "${{ inputs.tier }}".split(',')
+
+          # Map host to compatibility key
+          if host.startswith('windows'):
+              compat_key = 'Windows'
+          elif host.startswith('ubuntu'):
+              compat_key = 'Linux'
+          else:
+              compat_key = 'macOS'
+
+          # Host target compatibility (simplified)
+          HOST_COMPAT = {
+              'Windows': ['win32', 'win64', 'linux', 'freebsd', 'netbsd', 'openbsd', 'go32v2', 'wince', 'embedded', 'nativent', 'android', 'darwin', 'aix', 'solaris', 'haiku', 'aros', 'morphos', 'amiga', 'atari', 'msdos', 'win16', 'java', 'wasi', 'palmos', 'macosclassic', 'wii', 'gba', 'nds', 'symbian', 'freertos', 'zxspectrum', 'msxdos', 'amstradcpc', 'sinclairql', 'dragonfly', 'netware', 'netwlibc', 'os2', 'emx', 'watcom', 'beos', 'wdosx', 'iphonesim'],
+              'Linux': ['linux', 'win32', 'win64', 'freebsd', 'netbsd', 'openbsd', 'embedded', 'wince', 'android', 'wasi', 'java', 'freertos', 'solaris', 'haiku', 'aros', 'dragonfly'],
+              'macOS': ['darwin', 'ios', 'iphonesim', 'linux', 'win32', 'win64', 'freebsd', 'embedded', 'wince', 'android', 'wasi', 'java', 'freertos']
+          }
+
+          targets = []
+          for tier in tiers:
+              tier = tier.strip()
+              tier_data = config.get('tiers', {}).get(tier, {})
+              for t in tier_data.get('targets', []):
+                  if t.get('os', '') in HOST_COMPAT.get(compat_key, []):
+                      targets.append({
+                          'cpu': t.get('cpu', ''),
+                          'os': t.get('os', ''),
+                          'opt': t.get('opt', ''),
+                          'crossopt': t.get('crossopt', ''),
+                          'make_opt': t.get('make_opt', '')
+                      })
+
+          # Remove duplicates
+          seen = set()
+          unique = []
+          for t in targets:
+              key = f"{t['cpu']}-{t['os']}"
+              if key not in seen:
+                  seen.add(key)
+                  unique.append(t)
+
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"cross_matrix={json.dumps(unique)}\n")
+
+          print(f"Generated {len(unique)} cross targets for {compat_key}")
+          EOF
+
+  build-host:
+    needs: prepare
+    uses: ./.github/workflows/build-fpc-host.yml
+    with:
+      os: ${{ inputs.host }}
+      version: ${{ inputs.version }}
+      branch: ${{ inputs.branch }}
+      bootstrap_fpc: ${{ inputs.bootstrap_fpc }}
+      fpc_opt: ${{ needs.prepare.outputs.fpc_opt }}
+    secrets: inherit
+
+  test:
+    needs: [prepare, build-host]
+    if: inputs.run_tests
+    uses: ./.github/workflows/run-fpc-tests.yml
+    with:
+      os: ${{ inputs.host }}
+      version: ${{ inputs.version }}
+      host_bundle: fpc-${{ inputs.version }}-${{ needs.prepare.outputs.os_short }}
+    secrets: inherit
+
+  build-cross:
+    needs: [prepare, build-host, test]
+    if: always() && inputs.build_cross && needs.build-host.result == 'success' && (needs.test.result == 'success' || needs.test.result == 'skipped')
+    uses: ./.github/workflows/build-fpc-cross.yml
+    with:
+      os: ${{ inputs.host }}
+      version: ${{ inputs.version }}
+      host_bundle: fpc-${{ inputs.version }}-${{ needs.prepare.outputs.os_short }}
+      targets: ${{ needs.prepare.outputs.cross_matrix }}
+    secrets: inherit
+
+  summary:
+    needs: [prepare, build-host, test, build-cross]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Summary
+        run: |
+          echo "# FPC ${{ inputs.version }} - ${{ needs.prepare.outputs.os_display }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Step | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Host Build | ${{ needs.build-host.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests | ${{ needs.test.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Cross Build | ${{ needs.build-cross.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Bundle name:** \`fpc-${{ inputs.version }}-${{ needs.prepare.outputs.os_short }}\`" >> $GITHUB_STEP_SUMMARY
