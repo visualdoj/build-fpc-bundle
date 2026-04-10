@@ -75,6 +75,7 @@ jobs:
       cross_matrix_windows: ${{ steps.matrix.outputs.cross_matrix_windows }}
       cross_matrix_linux: ${{ steps.matrix.outputs.cross_matrix_linux }}
       cross_matrix_macos: ${{ steps.matrix.outputs.cross_matrix_macos }}
+      cross_matrix_macos_arm64: ${{ steps.matrix.outputs.cross_matrix_macos_arm64 }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -195,7 +196,7 @@ jobs:
             echo "Linux: FAIL (host=$HOST, test=$TEST)"
           fi
 
-  # ============ MACOS ============
+  # ============ MACOS (x86_64) ============
   build-host-macos:
     needs: prepare
     uses: ./.github/workflows/build-fpc-host.yml
@@ -235,23 +236,76 @@ jobs:
     outputs:
       include: ${{ steps.check.outputs.include }}
     steps:
-      - name: Check macOS build status
+      - name: Check macOS (x86_64) build status
         id: check
         run: |
           HOST="${{ needs.build-host-macos.result }}"
           TEST="${{ needs.test-macos.result }}"
           if [[ "$HOST" == "success" && ("$TEST" == "success" || "$TEST" == "skipped") ]]; then
             echo "include=true" >> $GITHUB_OUTPUT
-            echo "macOS: PASS"
+            echo "macOS (x86_64): PASS"
           else
             echo "include=false" >> $GITHUB_OUTPUT
-            echo "macOS: FAIL (host=$HOST, test=$TEST)"
+            echo "macOS (x86_64): FAIL (host=$HOST, test=$TEST)"
+          fi
+
+  # ============ MACOS (arm64) ============
+  build-host-macos-arm64:
+    needs: prepare
+    uses: ./.github/workflows/build-fpc-host.yml
+    with:
+      os: macos-latest
+      version: ${{ inputs.version }}
+      branch: ${{ inputs.branch }}
+      bootstrap_fpc: ${{ inputs.bootstrap_fpc }}
+      fpc_opt: '-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/'
+    secrets: inherit
+
+  test-macos-arm64:
+    needs: build-host-macos-arm64
+    if: inputs.run_tests == 'true'
+    uses: ./.github/workflows/run-fpc-tests.yml
+    with:
+      os: macos-latest
+      version: ${{ inputs.version }}
+      host_bundle: fpc-${{ inputs.version }}-arm64-macos
+    secrets: inherit
+
+  build-cross-macos-arm64:
+    needs: test-macos-arm64
+    if: inputs.tier != 'none' && needs.prepare.outputs.cross_matrix_macos_arm64 != '[]'
+    uses: ./.github/workflows/build-fpc-cross.yml
+    with:
+      os: macos-latest
+      version: ${{ inputs.version }}
+      host_bundle: fpc-${{ inputs.version }}-arm64-macos
+      targets: ${{ needs.prepare.outputs.cross_matrix_macos_arm64 }}
+    secrets: inherit
+
+  gate-macos-arm64:
+    needs: build-cross-macos-arm64
+    if: always()
+    runs-on: ubuntu-latest
+    outputs:
+      include: ${{ steps.check.outputs.include }}
+    steps:
+      - name: Check macOS (arm64) build status
+        id: check
+        run: |
+          HOST="${{ needs.build-host-macos-arm64.result }}"
+          TEST="${{ needs.test-macos-arm64.result }}"
+          if [[ "$HOST" == "success" && ("$TEST" == "success" || "$TEST" == "skipped") ]]; then
+            echo "include=true" >> $GITHUB_OUTPUT
+            echo "macOS (arm64): PASS"
+          else
+            echo "include=false" >> $GITHUB_OUTPUT
+            echo "macOS (arm64): FAIL (host=$HOST, test=$TEST)"
           fi
 
   # ============ RELEASE ============
   create-release:
-    needs: [gate-windows, gate-linux, gate-macos]
-    if: always() && (needs.gate-windows.outputs.include == 'true' || needs.gate-linux.outputs.include == 'true' || needs.gate-macos.outputs.include == 'true')
+    needs: [gate-windows, gate-linux, gate-macos, gate-macos-arm64]
+    if: always() && (needs.gate-windows.outputs.include == 'true' || needs.gate-linux.outputs.include == 'true' || needs.gate-macos.outputs.include == 'true' || needs.gate-macos-arm64.outputs.include == 'true')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -272,11 +326,19 @@ jobs:
           path: artifacts
           merge-multiple: true
 
-      - name: Download macOS artifacts
+      - name: Download macOS (x86_64) artifacts
         if: needs.gate-macos.outputs.include == 'true'
         uses: actions/download-artifact@v4
         with:
           pattern: fpc-${{ inputs.version }}-macos*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Download macOS (arm64) artifacts
+        if: needs.gate-macos-arm64.outputs.include == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fpc-${{ inputs.version }}-arm64-macos*
           path: artifacts
           merge-multiple: true
 
@@ -304,7 +366,8 @@ jobs:
           # Build status
           WIN_STATUS="${{ needs.gate-windows.outputs.include == 'true' && 'included' || 'excluded (build/test failed)' }}"
           LIN_STATUS="${{ needs.gate-linux.outputs.include == 'true' && 'included' || 'excluded (build/test failed)' }}"
-          MAC_STATUS="${{ needs.gate-macos.outputs.include == 'true' && 'included' || 'excluded (build/test failed)' }}"
+          MAC_X64_STATUS="${{ needs.gate-macos.outputs.include == 'true' && 'included' || 'excluded (build/test failed)' }}"
+          MAC_ARM64_STATUS="${{ needs.gate-macos-arm64.outputs.include == 'true' && 'included' || 'excluded (build/test failed)' }}"
 
           RELEASE_NOTES="Automated build of FPC ${{ inputs.version }} from branch ${{ inputs.branch }}
 
@@ -314,7 +377,8 @@ jobs:
           **Platform status:**
           - Windows: ${WIN_STATUS}
           - Linux: ${LIN_STATUS}
-          - macOS: ${MAC_STATUS}
+          - macOS (x86_64): ${MAC_X64_STATUS}
+          - macOS (arm64): ${MAC_ARM64_STATUS}
 
           See manifest.json for available artifacts."
 
@@ -333,7 +397,7 @@ jobs:
 
   # ============ SUMMARY ============
   summary:
-    needs: [gate-windows, gate-linux, gate-macos, create-release]
+    needs: [gate-windows, gate-linux, gate-macos, gate-macos-arm64, create-release]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -345,6 +409,7 @@ jobs:
           echo "|----------|---------------------|" >> $GITHUB_STEP_SUMMARY
           echo "| Windows | ${{ needs.gate-windows.outputs.include }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Linux | ${{ needs.gate-linux.outputs.include }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| macOS | ${{ needs.gate-macos.outputs.include }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| macOS (x86_64) | ${{ needs.gate-macos.outputs.include }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| macOS (arm64) | ${{ needs.gate-macos-arm64.outputs.include }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Release | ${{ needs.create-release.result }} |" >> $GITHUB_STEP_SUMMARY

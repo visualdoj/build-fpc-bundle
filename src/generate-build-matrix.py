@@ -117,11 +117,13 @@ def main():
         'host_matrix': json.dumps([
             {'os': 'windows-latest', 'name': 'windows'},
             {'os': 'ubuntu-latest', 'name': 'linux'},
-            {'os': 'macos-latest', 'name': 'macos'}
+            {'os': 'macos-26-intel', 'name': 'macos'},
+            {'os': 'macos-latest', 'name': 'arm64-macos'}
         ]),
         'cross_matrix_windows': json.dumps(matrices['windows']),
         'cross_matrix_linux': json.dumps(matrices['linux']),
         'cross_matrix_macos': json.dumps(matrices['macos']),
+        'cross_matrix_macos_arm64': json.dumps(matrices['macos']),
         'release_tag': release_tag,
         'build_date': build_date
     }
@@ -138,7 +140,8 @@ def main():
     print(f"Tiers: {tiers_to_include}", file=sys.stderr)
     print(f"Windows targets: {len(matrices['windows'])}", file=sys.stderr)
     print(f"Linux targets: {len(matrices['linux'])}", file=sys.stderr)
-    print(f"macOS targets: {len(matrices['macos'])}", file=sys.stderr)
+    print(f"macOS (x86_64) targets: {len(matrices['macos'])}", file=sys.stderr)
+    print(f"macOS (arm64) targets: {len(matrices['macos'])}", file=sys.stderr)
 
 
 if __name__ == '__main__':

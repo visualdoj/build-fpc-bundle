@@ -44,10 +44,12 @@ jobs:
         run: |
           OS_NAME="${{ inputs.os }}"
           case "$OS_NAME" in
-            windows-*) OS_SHORT="windows" ;;
-            ubuntu-*)  OS_SHORT="linux" ;;
-            macos-*)   OS_SHORT="macos" ;;
-            *)         OS_SHORT="$OS_NAME" ;;
+            windows-*)     OS_SHORT="windows" ;;
+            ubuntu-*)      OS_SHORT="linux" ;;
+            macos-26-intel) OS_SHORT="macos" ;;
+            macos-latest)  OS_SHORT="arm64-macos" ;;
+            macos-*)       OS_SHORT="macos" ;;
+            *)             OS_SHORT="$OS_NAME" ;;
           esac
           echo "os_short=$OS_SHORT" >> $GITHUB_OUTPUT
           echo "bundle_name=fpc-${{ inputs.version }}-$OS_SHORT" >> $GITHUB_OUTPUT

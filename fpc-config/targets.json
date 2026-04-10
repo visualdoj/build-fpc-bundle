@@ -128,7 +128,8 @@
   "host_os_map": {
     "windows-latest": "Windows",
     "ubuntu-latest": "Linux",
-    "macos-26-intel": "macOS"
+    "macos-26-intel": "macOS (x86_64)",
+    "macos-latest": "macOS (arm64)"
   },
   "host_configs": [
     {
@@ -145,7 +146,13 @@
     },
     {
       "os": "macos-26-intel",
-      "name": "macOS",
+      "name": "macOS (x86_64)",
+      "fpc_install": "system",
+      "fpc_opt": "-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
+    },
+    {
+      "os": "macos-latest",
+      "name": "macOS (arm64)",
       "fpc_install": "system",
       "fpc_opt": "-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
     }
