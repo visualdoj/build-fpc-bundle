@@ -65,6 +65,10 @@ jobs:
           # Export to GITHUB_ENV for use in subsequent steps
           echo "TEST_FPC=$FPC_PATH" >> $GITHUB_ENV
           echo "TEST_WORKSPACE=$WORKSPACE" >> $GITHUB_ENV
+          # PPC_CONFIG_PATH tells the compiler where to find fpc.cfg
+          echo "PPC_CONFIG_PATH=$WORKSPACE/fpc/fpc.cfg" >> $GITHUB_ENV
+          # FPC_INSTALLED_DIR is referenced in fpc.cfg for unit paths
+          echo "FPC_INSTALLED_DIR=$WORKSPACE/fpc/installed" >> $GITHUB_ENV
 
           echo "=== Environment Setup ==="
           echo "TEST_FPC=$FPC_PATH"
@@ -84,11 +88,19 @@ jobs:
         shell: bash
         run: |
           echo "=== Verification ==="
-          echo "TEST_FPC from env: $TEST_FPC"
-          echo "PATH: $PATH"
-          which fpc || echo "fpc not in PATH (expected, PATH updated in previous step)"
-          echo "Testing FPC directly:"
+          echo "TEST_FPC: $TEST_FPC"
+          echo "PPC_CONFIG_PATH: $PPC_CONFIG_PATH"
+          echo "FPC_INSTALLED_DIR: $FPC_INSTALLED_DIR"
+          echo ""
+          echo "=== Config file contents ==="
+          head -30 "$PPC_CONFIG_PATH" || echo "Could not read config file"
+          echo ""
+          echo "=== FPC info ==="
           "$TEST_FPC" -iV
+          echo ""
+          echo "=== Testing compilation ==="
+          echo "program test; begin end." > /tmp/test.pp
+          "$TEST_FPC" /tmp/test.pp -v0 && echo "Compilation OK" || echo "Compilation FAILED"
 
       - name: Run compiler tests
         working-directory: fpc/src/tests
