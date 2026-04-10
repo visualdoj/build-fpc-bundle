@@ -159,7 +159,7 @@ jobs:
     secrets: inherit
 
   test:
-    needs: build-host
+    needs: [prepare, build-host]
     if: inputs.run_tests
     uses: ./.github/workflows/run-fpc-tests.yml
     with:
@@ -169,7 +169,7 @@ jobs:
     secrets: inherit
 
   build-cross:
-    needs: [build-host, test]
+    needs: [prepare, build-host, test]
     if: always() && inputs.build_cross && needs.build-host.result == 'success' && (needs.test.result == 'success' || needs.test.result == 'skipped')
     uses: ./.github/workflows/build-fpc-cross.yml
     with:
