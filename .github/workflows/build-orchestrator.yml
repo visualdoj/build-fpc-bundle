@@ -111,7 +111,7 @@ jobs:
     secrets: inherit
 
   build-cross-windows:
-    needs: [build-host-windows]
+    needs: test-windows
     if: inputs.tier != 'none' && needs.prepare.outputs.cross_matrix_windows != '[]'
     uses: ./.github/workflows/build-fpc-cross.yml
     with:
@@ -122,7 +122,7 @@ jobs:
     secrets: inherit
 
   gate-windows:
-    needs: [build-host-windows, test-windows, build-cross-windows]
+    needs: build-cross-windows
     if: always()
     runs-on: ubuntu-latest
     outputs:
@@ -165,7 +165,7 @@ jobs:
     secrets: inherit
 
   build-cross-linux:
-    needs: [build-host-linux]
+    needs: test-linux
     if: inputs.tier != 'none' && needs.prepare.outputs.cross_matrix_linux != '[]'
     uses: ./.github/workflows/build-fpc-cross.yml
     with:
@@ -176,7 +176,7 @@ jobs:
     secrets: inherit
 
   gate-linux:
-    needs: [build-host-linux, test-linux, build-cross-linux]
+    needs: build-cross-linux
     if: always()
     runs-on: ubuntu-latest
     outputs:
@@ -218,7 +218,7 @@ jobs:
     secrets: inherit
 
   build-cross-macos:
-    needs: [build-host-macos]
+    needs: test-macos
     if: inputs.tier != 'none' && needs.prepare.outputs.cross_matrix_macos != '[]'
     uses: ./.github/workflows/build-fpc-cross.yml
     with:
@@ -229,7 +229,7 @@ jobs:
     secrets: inherit
 
   gate-macos:
-    needs: [build-host-macos, test-macos, build-cross-macos]
+    needs: build-cross-macos
     if: always()
     runs-on: ubuntu-latest
     outputs:
