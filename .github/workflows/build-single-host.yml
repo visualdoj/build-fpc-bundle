@@ -180,7 +180,7 @@ jobs:
     secrets: inherit
 
   release:
-    needs: [build-host, test, build-cross]
+    needs: [prepare, build-host, test, build-cross]
     if: always() && inputs.create_release && needs.build-host.result == 'success' && (needs.test.result == 'success' || needs.test.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
@@ -231,7 +231,7 @@ jobs:
           echo "Release URL: https://github.com/${{ github.repository }}/releases/tag/$RELEASE_TAG"
 
   summary:
-    needs: [build-host, test, build-cross, release]
+    needs: [prepare, build-host, test, build-cross, release]
     if: always()
     runs-on: ubuntu-latest
     steps:
