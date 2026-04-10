@@ -46,8 +46,7 @@ jobs:
           echo "=== installed/lib/fpc contents ==="
           ls -la fpc/installed/lib/fpc/ 2>/dev/null || echo "fpc/installed/lib/fpc/ not found"
 
-      - name: Add FPC to PATH and determine compiler
-        id: fpc_path
+      - name: Setup FPC environment
         shell: bash
         run: |
           # Convert Windows backslashes to forward slashes for bash compatibility
@@ -63,55 +62,68 @@ jobs:
             FPC_PATH="$WORKSPACE/fpc/installed/bin/fpc"
           fi
 
-          echo "fpc=$FPC_PATH" >> $GITHUB_OUTPUT
-          echo "workspace=$WORKSPACE" >> $GITHUB_OUTPUT
+          # Export to GITHUB_ENV for use in subsequent steps
+          echo "TEST_FPC=$FPC_PATH" >> $GITHUB_ENV
+          echo "TEST_WORKSPACE=$WORKSPACE" >> $GITHUB_ENV
 
-          echo "Using FPC at: $FPC_PATH"
+          echo "=== Environment Setup ==="
+          echo "TEST_FPC=$FPC_PATH"
+          echo "TEST_WORKSPACE=$WORKSPACE"
+
+          # Verify FPC exists
           if [ -f "$FPC_PATH" ]; then
-            echo "FPC binary exists"
+            echo "FPC binary exists at $FPC_PATH"
             ls -la "$FPC_PATH"
           else
             echo "ERROR: FPC not found at $FPC_PATH"
-            echo "Listing bundle structure:"
-            find "$WORKSPACE/fpc" -type f -name "fpc*" -o -name "ppc*" 2>/dev/null | head -20
+            find "$WORKSPACE/fpc" -type f \( -name "fpc*" -o -name "ppc*" \) 2>/dev/null | head -20
             exit 1
           fi
 
       - name: Verify FPC installation
         shell: bash
         run: |
-          echo "PATH=$PATH"
-          which fpc || echo "fpc not in PATH"
-          "${{ steps.fpc_path.outputs.fpc }}" -i
+          echo "=== Verification ==="
+          echo "TEST_FPC from env: $TEST_FPC"
+          echo "PATH: $PATH"
+          which fpc || echo "fpc not in PATH (expected, PATH updated in previous step)"
+          echo "Testing FPC directly:"
+          "$TEST_FPC" -iV
 
       - name: Run compiler tests
         working-directory: fpc/src/tests
         shell: bash
         run: |
-          FPC_PATH="${{ steps.fpc_path.outputs.fpc }}"
-          WORKSPACE="${{ steps.fpc_path.outputs.workspace }}"
-
           echo "=== Test Configuration ==="
-          echo "TEST_FPC=$FPC_PATH"
-          echo "TEST_OUTPUTDIR=$WORKSPACE/test-output"
-          echo "FPC version:"
-          "$FPC_PATH" -iV
+          echo "TEST_FPC=$TEST_FPC"
+          echo "TEST_OUTPUTDIR=$TEST_WORKSPACE/test-output"
 
+          # Verify variables are set
+          if [ -z "$TEST_FPC" ]; then
+            echo "ERROR: TEST_FPC is empty!"
+            exit 1
+          fi
+
+          # Verify FPC works
+          echo "FPC version:"
+          "$TEST_FPC" -iV
+
+          # Run tests
           make clean
-          make digest TEST_FPC="$FPC_PATH" \
-            TEST_OUTPUTDIR="$WORKSPACE/test-output" \
+          make digest \
+            TEST_FPC="$TEST_FPC" \
+            TEST_OUTPUTDIR="$TEST_WORKSPACE/test-output" \
             FULL=1
 
       - name: Generate test report
         if: always()
         shell: bash
         run: |
-          WORKSPACE="${{ steps.fpc_path.outputs.workspace }}"
           echo "## Test Results for ${{ inputs.os }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ -f "$WORKSPACE/test-output/log" ]; then
+          if [ -f "$TEST_WORKSPACE/test-output/log" ]; then
             echo '```' >> $GITHUB_STEP_SUMMARY
-            tail -100 "$WORKSPACE/test-output/log" >> $GITHUB_STEP_SUMMARY
+            tail -100 "$TEST_WORKSPACE/test-output/log" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           else
             echo "No test log found" >> $GITHUB_STEP_SUMMARY
@@ -122,6 +134,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results-${{ inputs.os }}
-          path: ${{ steps.fpc_path.outputs.workspace }}/test-output/
+          path: ${{ github.workspace }}/test-output/
           retention-days: 7
           if-no-files-found: ignore
