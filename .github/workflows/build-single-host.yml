@@ -44,6 +44,11 @@ on:
           - tier1
           - tier1,tier2
           - tier1,tier2,tier3
+      create_release:
+        description: 'Create/update GitHub release'
+        required: false
+        default: true
+        type: boolean
 
 jobs:
   prepare:
@@ -154,7 +159,7 @@ jobs:
     secrets: inherit
 
   test:
-    needs: [prepare, build-host]
+    needs: build-host
     if: inputs.run_tests
     uses: ./.github/workflows/run-fpc-tests.yml
     with:
@@ -164,7 +169,7 @@ jobs:
     secrets: inherit
 
   build-cross:
-    needs: [prepare, build-host, test]
+    needs: [build-host, test]
     if: always() && inputs.build_cross && needs.build-host.result == 'success' && (needs.test.result == 'success' || needs.test.result == 'skipped')
     uses: ./.github/workflows/build-fpc-cross.yml
     with:
@@ -174,8 +179,59 @@ jobs:
       targets: ${{ needs.prepare.outputs.cross_matrix }}
     secrets: inherit
 
+  release:
+    needs: [build-host, test, build-cross]
+    if: always() && inputs.create_release && needs.build-host.result == 'success' && (needs.test.result == 'success' || needs.test.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fpc-${{ inputs.version }}-${{ needs.prepare.outputs.os_short }}*
+          path: artifacts
+          merge-multiple: true
+
+      - name: List artifacts
+        run: |
+          echo "Artifacts to release:"
+          find artifacts -name "*.tar.gz" 2>/dev/null || echo "No artifacts found"
+
+      - name: Create/Update Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_TAG="v${{ inputs.version }}-latest"
+          RELEASE_TITLE="FPC ${{ inputs.version }} (latest build)"
+          OS_DISPLAY="${{ needs.prepare.outputs.os_display }}"
+
+          RELEASE_NOTES="Automated build of FPC ${{ inputs.version }} from branch ${{ inputs.branch }}
+
+          **Platform:** ${OS_DISPLAY}
+          **Build date:** $(date -u +%Y-%m-%d)
+          **Tests:** ${{ needs.test.result }}
+
+          Built using Build Single Host workflow."
+
+          # Check if release exists
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG exists, uploading artifacts..."
+          else
+            echo "Creating new release $RELEASE_TAG..."
+            gh release create "$RELEASE_TAG" \
+              --title "$RELEASE_TITLE" \
+              --notes "$RELEASE_NOTES" \
+              --prerelease
+          fi
+
+          # Upload all artifacts (overwrite if exists)
+          find artifacts -name "*.tar.gz" -exec gh release upload "$RELEASE_TAG" {} --clobber \; 2>/dev/null || true
+
+          echo "Release URL: https://github.com/${{ github.repository }}/releases/tag/$RELEASE_TAG"
+
   summary:
-    needs: [prepare, build-host, test, build-cross]
+    needs: [build-host, test, build-cross, release]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -188,5 +244,10 @@ jobs:
           echo "| Host Build | ${{ needs.build-host.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Tests | ${{ needs.test.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Cross Build | ${{ needs.build-cross.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Release | ${{ needs.release.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Bundle name:** \`fpc-${{ inputs.version }}-${{ needs.prepare.outputs.os_short }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.release.result }}" = "success" ]; then
+            echo "**Release:** https://github.com/${{ github.repository }}/releases/tag/v${{ inputs.version }}-latest" >> $GITHUB_STEP_SUMMARY
+          fi
