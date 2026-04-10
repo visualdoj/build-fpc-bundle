@@ -38,7 +38,7 @@ jobs:
       tier: ${{ steps.config.outputs.tier }}
       versions: ${{ steps.config.outputs.versions }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Determine build configuration
         id: config

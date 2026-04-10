@@ -22,7 +22,7 @@ jobs:
     runs-on: ${{ inputs.os }}
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download host bundle
         uses: actions/download-artifact@v4

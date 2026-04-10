@@ -59,7 +59,7 @@ jobs:
           echo "workspace=$WORKSPACE" >> $GITHUB_OUTPUT
 
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install FPC (apt)
         if: runner.os == 'Linux' && inputs.bootstrap_fpc == 'system'

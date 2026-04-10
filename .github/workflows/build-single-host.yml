@@ -59,7 +59,7 @@ jobs:
       fpc_opt: ${{ steps.vars.outputs.fpc_opt }}
       cross_matrix: ${{ steps.matrix.outputs.cross_matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set host variables
         id: vars
@@ -184,7 +184,7 @@ jobs:
     if: always() && inputs.create_release && needs.build-host.result == 'success' && (needs.test.result == 'success' || needs.test.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Download artifacts
         uses: actions/download-artifact@v4

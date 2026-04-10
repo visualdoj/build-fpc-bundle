@@ -83,7 +83,7 @@ jobs:
     runs-on: ${{ inputs.os }}
     steps:
       - name: Check out
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Install Free Pascal Compiler (apt-get)
         if: ((runner.os == 'Linux') && (inputs.fpc == 'system')) || (inputs.fpc == 'apt')
@@ -188,7 +188,7 @@ jobs:
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
@@ -210,7 +210,7 @@ jobs:
 
     steps:
       - name: Check out
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Download FPC bundle
         uses: actions/download-artifact@v3
@@ -313,7 +313,7 @@ jobs:
     if: (success() || failure()) && (inputs.cross != '')
     runs-on: ${{ inputs.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - uses: actions/download-artifact@v3
       - run: ls -R
       - run: make aggregate BUNDLE_NAME=${{ inputs.bundle_name }} VERBOSE=1

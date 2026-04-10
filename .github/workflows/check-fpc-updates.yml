@@ -29,7 +29,7 @@ jobs:
       has_updates: ${{ steps.check.outputs.has_updates }}
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -88,7 +88,7 @@ jobs:
         version: ${{ fromJSON(needs.check-updates.outputs.versions_to_build) }}
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Trigger build for ${{ matrix.version.name }}
         env:
