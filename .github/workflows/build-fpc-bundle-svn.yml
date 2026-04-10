@@ -81,7 +81,7 @@ jobs:
         run: make install PREFIX="${{ github.workspace }}/bundle"
 
       - name: Upload the bundle
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v7
         with:
           name: "${{ github.event.inputs.bundle_name }}"
           path: "${{ github.workspace }}/bundle"

@@ -312,7 +312,7 @@ jobs:
 
       - name: Download Windows artifacts
         if: needs.gate-windows.outputs.include == 'true'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: fpc-${{ inputs.version }}-windows*
           path: artifacts
@@ -320,7 +320,7 @@ jobs:
 
       - name: Download Linux artifacts
         if: needs.gate-linux.outputs.include == 'true'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: fpc-${{ inputs.version }}-linux*
           path: artifacts
@@ -328,7 +328,7 @@ jobs:
 
       - name: Download macOS (x86_64) artifacts
         if: needs.gate-macos.outputs.include == 'true'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: fpc-${{ inputs.version }}-macos*
           path: artifacts
@@ -336,7 +336,7 @@ jobs:
 
       - name: Download macOS (arm64) artifacts
         if: needs.gate-macos-arm64.outputs.include == 'true'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: fpc-${{ inputs.version }}-arm64-macos*
           path: artifacts
