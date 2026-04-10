@@ -21,15 +21,6 @@ jobs:
     name: Test (${{ inputs.os }})
     runs-on: ${{ inputs.os }}
     steps:
-      - name: Set variables
-        id: vars
-        shell: bash
-        run: |
-          # Convert Windows backslashes to forward slashes
-          WORKSPACE="${{ github.workspace }}"
-          WORKSPACE="${WORKSPACE//\\//}"
-          echo "workspace=$WORKSPACE" >> $GITHUB_OUTPUT
-
       - name: Check out
         uses: actions/checkout@v4
 
@@ -55,44 +46,57 @@ jobs:
           echo "=== installed/lib/fpc contents ==="
           ls -la fpc/installed/lib/fpc/ 2>/dev/null || echo "fpc/installed/lib/fpc/ not found"
 
-      - name: Add FPC to PATH (non-Windows)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          echo "${{ steps.vars.outputs.workspace }}/fpc/installed/bin" >> $GITHUB_PATH
-          echo "${{ steps.vars.outputs.workspace }}/fpc/installed/lib/fpc/${{ inputs.version }}" >> $GITHUB_PATH
-
-      - name: Add FPC to PATH (Windows)
-        if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          echo "${{ steps.vars.outputs.workspace }}/fpc/installed/bin/i386-win32" >> $GITHUB_PATH
-
-      - name: Determine FPC path
+      - name: Add FPC to PATH and determine compiler
         id: fpc_path
         shell: bash
         run: |
-          WORKSPACE="${{ steps.vars.outputs.workspace }}"
+          # Convert Windows backslashes to forward slashes for bash compatibility
+          WORKSPACE="${{ github.workspace }}"
+          WORKSPACE="${WORKSPACE//\\//}"
+
           if [ "${{ runner.os }}" = "Windows" ]; then
+            echo "$WORKSPACE/fpc/installed/bin/i386-win32" >> $GITHUB_PATH
             FPC_PATH="$WORKSPACE/fpc/installed/bin/i386-win32/fpc.exe"
           else
+            echo "$WORKSPACE/fpc/installed/bin" >> $GITHUB_PATH
+            echo "$WORKSPACE/fpc/installed/lib/fpc/${{ inputs.version }}" >> $GITHUB_PATH
             FPC_PATH="$WORKSPACE/fpc/installed/bin/fpc"
           fi
+
           echo "fpc=$FPC_PATH" >> $GITHUB_OUTPUT
+          echo "workspace=$WORKSPACE" >> $GITHUB_OUTPUT
+
           echo "Using FPC at: $FPC_PATH"
-          ls -la "$FPC_PATH" || echo "WARNING: FPC not found at expected path"
+          if [ -f "$FPC_PATH" ]; then
+            echo "FPC binary exists"
+            ls -la "$FPC_PATH"
+          else
+            echo "ERROR: FPC not found at $FPC_PATH"
+            echo "Listing bundle structure:"
+            find "$WORKSPACE/fpc" -type f -name "fpc*" -o -name "ppc*" 2>/dev/null | head -20
+            exit 1
+          fi
 
       - name: Verify FPC installation
         shell: bash
-        run: fpc -i
+        run: |
+          echo "PATH=$PATH"
+          which fpc || echo "fpc not in PATH"
+          "${{ steps.fpc_path.outputs.fpc }}" -i
 
       - name: Run compiler tests
         working-directory: fpc/src/tests
         shell: bash
         run: |
-          WORKSPACE="${{ steps.vars.outputs.workspace }}"
           FPC_PATH="${{ steps.fpc_path.outputs.fpc }}"
+          WORKSPACE="${{ steps.fpc_path.outputs.workspace }}"
+
+          echo "=== Test Configuration ==="
           echo "TEST_FPC=$FPC_PATH"
+          echo "TEST_OUTPUTDIR=$WORKSPACE/test-output"
+          echo "FPC version:"
+          "$FPC_PATH" -iV
+
           make clean
           make digest TEST_FPC="$FPC_PATH" \
             TEST_OUTPUTDIR="$WORKSPACE/test-output" \
@@ -102,7 +106,7 @@ jobs:
         if: always()
         shell: bash
         run: |
-          WORKSPACE="${{ steps.vars.outputs.workspace }}"
+          WORKSPACE="${{ steps.fpc_path.outputs.workspace }}"
           echo "## Test Results for ${{ inputs.os }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ -f "$WORKSPACE/test-output/log" ]; then
@@ -118,6 +122,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results-${{ inputs.os }}
-          path: ${{ steps.vars.outputs.workspace }}/test-output/
+          path: ${{ steps.fpc_path.outputs.workspace }}/test-output/
           retention-days: 7
           if-no-files-found: ignore
