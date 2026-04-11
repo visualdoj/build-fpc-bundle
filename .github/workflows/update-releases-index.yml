@@ -1,0 +1,57 @@
+name: Update Releases Index
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  update-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Generate releases table
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python src/generate-releases-table.py \
+            --repo "${{ github.repository }}" \
+            --token "$GITHUB_TOKEN" \
+            --output releases-table.md
+
+          echo "Generated table:"
+          cat releases-table.md
+
+      - name: Update index release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_TAG="available-builds"
+          RELEASE_TITLE="Available FPC Builds"
+
+          # Read the generated table
+          RELEASE_BODY=$(cat releases-table.md)
+
+          # Check if release exists
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Updating existing release..."
+            gh release edit "$RELEASE_TAG" \
+              --title "$RELEASE_TITLE" \
+              --notes "$RELEASE_BODY"
+          else
+            echo "Creating new release..."
+            gh release create "$RELEASE_TAG" \
+              --title "$RELEASE_TITLE" \
+              --notes "$RELEASE_BODY" \
+              --latest=false
+          fi
+
+          echo "Index release updated: https://github.com/${{ github.repository }}/releases/tag/$RELEASE_TAG"

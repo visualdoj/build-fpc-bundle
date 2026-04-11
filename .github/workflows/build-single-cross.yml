@@ -446,3 +446,9 @@ jobs:
           if [ "${{ needs.release.result }}" = "success" ]; then
             echo "**Release:** https://github.com/${{ github.repository }}/releases/tag/v${{ inputs.version }}-latest" >> $GITHUB_STEP_SUMMARY
           fi
+
+  update-index:
+    needs: release
+    if: needs.release.result == 'success'
+    uses: ./.github/workflows/update-releases-index.yml
+    secrets: inherit

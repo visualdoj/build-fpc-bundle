@@ -459,3 +459,10 @@ jobs:
           echo "| macOS (arm64) | ${{ needs.gate-macos-arm64.outputs.include }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Release | ${{ needs.create-release.result }} |" >> $GITHUB_STEP_SUMMARY
+
+  # ============ UPDATE INDEX ============
+  update-index:
+    needs: create-release
+    if: needs.create-release.result == 'success'
+    uses: ./.github/workflows/update-releases-index.yml
+    secrets: inherit
