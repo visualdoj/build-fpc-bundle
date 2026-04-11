@@ -304,9 +304,11 @@ jobs:
 
   # ============ RELEASE ============
   create-release:
-    needs: [gate-windows, gate-linux, gate-macos, gate-macos-arm64]
+    needs: [build-host-linux, gate-windows, gate-linux, gate-macos, gate-macos-arm64]
     if: always() && (needs.gate-windows.outputs.include == 'true' || needs.gate-linux.outputs.include == 'true' || needs.gate-macos.outputs.include == 'true' || needs.gate-macos-arm64.outputs.include == 'true')
     runs-on: ubuntu-latest
+    env:
+      SOURCE_VERSION: ${{ needs.build-host-linux.outputs.source_version }}
     steps:
       - uses: actions/checkout@v6
 
@@ -394,6 +396,50 @@ jobs:
           # Upload all artifacts
           find artifacts -name "*.tar.gz" -exec gh release upload "$RELEASE_TAG" {} \; 2>/dev/null || true
           gh release upload "$RELEASE_TAG" manifest.json
+
+      - name: Create/Update Source Version Release
+        if: inputs.version == 'main' && env.SOURCE_VERSION != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SOURCE_VERSION="${{ env.SOURCE_VERSION }}"
+          RELEASE_TAG="v${SOURCE_VERSION}-latest"
+          RELEASE_TITLE="FPC ${SOURCE_VERSION} (latest build)"
+
+          # Build status
+          WIN_STATUS="${{ needs.gate-windows.outputs.include == 'true' && 'included' || 'excluded (build/test failed)' }}"
+          LIN_STATUS="${{ needs.gate-linux.outputs.include == 'true' && 'included' || 'excluded (build/test failed)' }}"
+          MAC_X64_STATUS="${{ needs.gate-macos.outputs.include == 'true' && 'included' || 'excluded (build/test failed)' }}"
+          MAC_ARM64_STATUS="${{ needs.gate-macos-arm64.outputs.include == 'true' && 'included' || 'excluded (build/test failed)' }}"
+
+          RELEASE_NOTES="Automated build of FPC ${SOURCE_VERSION} (development) from branch ${{ inputs.branch }}
+
+          **Commit:** ${{ inputs.commit }}
+          **Build date:** $(date -u +%Y-%m-%d)
+
+          **Platform status:**
+          - Windows: ${WIN_STATUS}
+          - Linux: ${LIN_STATUS}
+          - macOS (x86_64): ${MAC_X64_STATUS}
+          - macOS (arm64): ${MAC_ARM64_STATUS}
+
+          Note: This is a development build from the main branch.
+          See manifest.json for available artifacts."
+
+          # Delete existing release if present
+          gh release delete "$RELEASE_TAG" --yes 2>/dev/null || true
+
+          # Create new release
+          gh release create "$RELEASE_TAG" \
+            --title "$RELEASE_TITLE" \
+            --notes "$RELEASE_NOTES" \
+            --prerelease
+
+          # Upload all artifacts
+          find artifacts -name "*.tar.gz" -exec gh release upload "$RELEASE_TAG" {} \; 2>/dev/null || true
+          gh release upload "$RELEASE_TAG" manifest.json
+
+          echo "Also released as: $RELEASE_TAG"
 
   # ============ SUMMARY ============
   summary:

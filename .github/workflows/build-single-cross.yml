@@ -58,6 +58,7 @@ jobs:
       os_short: ${{ steps.vars.outputs.os_short }}
       artifact_name: ${{ steps.vars.outputs.artifact_name }}
       tests_supported: ${{ steps.qemu.outputs.supported }}
+      source_version: ${{ steps.source_version.outputs.version }}
     steps:
       - name: Set variables
         id: vars
@@ -93,6 +94,17 @@ jobs:
           fpc -iV
           echo "FPC full info:"
           fpc -i
+
+      - name: Detect source version
+        id: source_version
+        shell: bash
+        run: |
+          VERSION_NR=$(grep "version_nr" .fpc/src/compiler/version.pas | grep -oE "'[0-9]+'" | tr -d "'")
+          RELEASE_NR=$(grep "release_nr" .fpc/src/compiler/version.pas | grep -oE "'[0-9]+'" | tr -d "'")
+          PATCH_NR=$(grep "patch_nr" .fpc/src/compiler/version.pas | grep -oE "'[0-9]+'" | tr -d "'")
+          SOURCE_VERSION="${VERSION_NR}.${RELEASE_NR}.${PATCH_NR}"
+          echo "version=$SOURCE_VERSION" >> $GITHUB_OUTPUT
+          echo "Detected source version: $SOURCE_VERSION"
 
       - name: Copy cross tools
         if: runner.os != 'Windows'
@@ -339,6 +351,8 @@ jobs:
     needs: build-cross
     if: inputs.create_release
     runs-on: ubuntu-latest
+    env:
+      SOURCE_VERSION: ${{ needs.build-cross.outputs.source_version }}
     steps:
       - uses: actions/checkout@v6
 
@@ -375,6 +389,31 @@ jobs:
           find artifacts -name "*.tar.gz" -exec gh release upload "$RELEASE_TAG" {} --clobber \; 2>/dev/null || true
 
           echo "Release URL: https://github.com/${{ github.repository }}/releases/tag/$RELEASE_TAG"
+
+      - name: Create/Update Source Version Release
+        if: inputs.version == 'main' && env.SOURCE_VERSION != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SOURCE_VERSION="${{ env.SOURCE_VERSION }}"
+          RELEASE_TAG="v${SOURCE_VERSION}-latest"
+          RELEASE_TITLE="FPC ${SOURCE_VERSION} (latest build)"
+
+          # Check if release exists
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG exists, uploading artifacts..."
+          else
+            echo "Creating new release $RELEASE_TAG..."
+            gh release create "$RELEASE_TAG" \
+              --title "$RELEASE_TITLE" \
+              --notes "Automated build of FPC ${SOURCE_VERSION} (development). Cross compiler for ${{ inputs.target_cpu }}-${{ inputs.target_os }}." \
+              --prerelease
+          fi
+
+          # Upload all artifacts (overwrite if exists)
+          find artifacts -name "*.tar.gz" -exec gh release upload "$RELEASE_TAG" {} --clobber \; 2>/dev/null || true
+
+          echo "Also released as: $RELEASE_TAG"
 
   summary:
     needs: [build-cross, release]
