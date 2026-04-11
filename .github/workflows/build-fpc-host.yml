@@ -105,9 +105,9 @@ jobs:
         working-directory: fpc_src
         shell: bash
         run: |
-          VERSION_NR=$(grep "version_nr" compiler/version.pas | grep -oE "'[0-9]+'" | tr -d "'")
-          RELEASE_NR=$(grep "release_nr" compiler/version.pas | grep -oE "'[0-9]+'" | tr -d "'")
-          PATCH_NR=$(grep "patch_nr" compiler/version.pas | grep -oE "'[0-9]+'" | tr -d "'")
+          VERSION_NR=$(grep -E "^\s*version_nr\s*=" compiler/version.pas | grep -oE "'[0-9]+'" | head -1 | tr -d "'")
+          RELEASE_NR=$(grep -E "^\s*release_nr\s*=" compiler/version.pas | grep -oE "'[0-9]+'" | head -1 | tr -d "'")
+          PATCH_NR=$(grep -E "^\s*patch_nr\s*=" compiler/version.pas | grep -oE "'[0-9]+'" | head -1 | tr -d "'")
           SOURCE_VERSION="${VERSION_NR}.${RELEASE_NR}.${PATCH_NR}"
           echo "version=$SOURCE_VERSION" >> $GITHUB_OUTPUT
           echo "Detected source version: $SOURCE_VERSION"

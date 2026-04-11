@@ -100,9 +100,9 @@ jobs:
         id: source_version
         shell: bash
         run: |
-          VERSION_NR=$(grep "version_nr" .fpc/src/compiler/version.pas | grep -oE "'[0-9]+'" | tr -d "'")
-          RELEASE_NR=$(grep "release_nr" .fpc/src/compiler/version.pas | grep -oE "'[0-9]+'" | tr -d "'")
-          PATCH_NR=$(grep "patch_nr" .fpc/src/compiler/version.pas | grep -oE "'[0-9]+'" | tr -d "'")
+          VERSION_NR=$(grep -E "^\s*version_nr\s*=" .fpc/src/compiler/version.pas | grep -oE "'[0-9]+'" | head -1 | tr -d "'")
+          RELEASE_NR=$(grep -E "^\s*release_nr\s*=" .fpc/src/compiler/version.pas | grep -oE "'[0-9]+'" | head -1 | tr -d "'")
+          PATCH_NR=$(grep -E "^\s*patch_nr\s*=" .fpc/src/compiler/version.pas | grep -oE "'[0-9]+'" | head -1 | tr -d "'")
           SOURCE_VERSION="${VERSION_NR}.${RELEASE_NR}.${PATCH_NR}"
           echo "version=$SOURCE_VERSION" >> $GITHUB_OUTPUT
           echo "Detected source version: $SOURCE_VERSION"
