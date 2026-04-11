@@ -40,7 +40,7 @@ on:
         default: ''
         type: string
       run_tests:
-        description: 'Run tests using QEMU (Linux targets only)'
+        description: 'Run tests (QEMU for Linux targets, native for Windows x86_64-win64)'
         required: false
         default: false
         type: boolean
@@ -57,7 +57,8 @@ jobs:
     outputs:
       os_short: ${{ steps.vars.outputs.os_short }}
       artifact_name: ${{ steps.vars.outputs.artifact_name }}
-      tests_supported: ${{ steps.qemu.outputs.supported }}
+      tests_supported: ${{ steps.test_support.outputs.supported }}
+      test_mode: ${{ steps.test_support.outputs.test_mode }}
       source_version: ${{ steps.source_version.outputs.version }}
     steps:
       - name: Set variables
@@ -174,17 +175,23 @@ jobs:
         shell: bash
         run: tar -czvf "../${{ steps.vars.outputs.artifact_name }}.tar.gz" *
 
-      - name: Determine QEMU emulator
+      - name: Determine test support
         if: inputs.run_tests
-        id: qemu
+        id: test_support
         shell: bash
         run: |
+          SUPPORTED="false"
+          TEST_MODE=""
           EMULATOR=""
           SYSROOT=""
-          SUPPORTED="false"
 
-          # Only Linux targets are supported for QEMU user-mode emulation
-          if [[ "${{ inputs.target_os }}" == "linux" ]]; then
+          # Special case: Windows host -> x86_64-win64 can run natively
+          if [[ "${{ runner.os }}" == "Windows" && "${{ inputs.target_cpu }}" == "x86_64" && "${{ inputs.target_os }}" == "win64" ]]; then
+            SUPPORTED="true"
+            TEST_MODE="native"
+            echo "Tests will run natively (Windows x86_64)"
+          # Linux targets can use QEMU user-mode emulation
+          elif [[ "${{ runner.os }}" == "Linux" && "${{ inputs.target_os }}" == "linux" ]]; then
             case "${{ inputs.target_cpu }}" in
               aarch64)
                 EMULATOR="qemu-aarch64"
@@ -198,12 +205,10 @@ jobs:
                 ;;
               i386)
                 EMULATOR="qemu-i386"
-                SYSROOT=""
                 SUPPORTED="true"
                 ;;
               x86_64)
                 EMULATOR="qemu-x86_64"
-                SYSROOT=""
                 SUPPORTED="true"
                 ;;
               riscv64)
@@ -247,33 +252,40 @@ jobs:
                 SUPPORTED="true"
                 ;;
             esac
+            if [[ "$SUPPORTED" == "true" ]]; then
+              TEST_MODE="qemu"
+              echo "Tests will use QEMU: $EMULATOR"
+            fi
           fi
 
+          echo "supported=$SUPPORTED" >> $GITHUB_OUTPUT
+          echo "test_mode=$TEST_MODE" >> $GITHUB_OUTPUT
           echo "emulator=$EMULATOR" >> $GITHUB_OUTPUT
           echo "sysroot=$SYSROOT" >> $GITHUB_OUTPUT
-          echo "supported=$SUPPORTED" >> $GITHUB_OUTPUT
+          # Default passed to true, will be set to false if tests fail
+          echo "passed=true" >> $GITHUB_OUTPUT
 
-          if [[ "$SUPPORTED" == "true" ]]; then
-            if [[ -n "$SYSROOT" ]]; then
-              echo "emulator_cmd=$EMULATOR -L $SYSROOT" >> $GITHUB_OUTPUT
-            else
-              echo "emulator_cmd=$EMULATOR" >> $GITHUB_OUTPUT
-            fi
-            echo "Tests will use: $EMULATOR"
+          if [[ "$SUPPORTED" == "true" && -n "$SYSROOT" ]]; then
+            echo "emulator_cmd=$EMULATOR -L $SYSROOT" >> $GITHUB_OUTPUT
+          elif [[ "$SUPPORTED" == "true" && -n "$EMULATOR" ]]; then
+            echo "emulator_cmd=$EMULATOR" >> $GITHUB_OUTPUT
           else
             echo "emulator_cmd=" >> $GITHUB_OUTPUT
-            echo "::warning::QEMU testing not supported for ${{ inputs.target_cpu }}-${{ inputs.target_os }}"
+          fi
+
+          if [[ "$SUPPORTED" != "true" ]]; then
+            echo "::notice::Testing not supported for ${{ inputs.target_cpu }}-${{ inputs.target_os }} on ${{ runner.os }}"
           fi
 
       - name: Setup QEMU
-        if: inputs.run_tests && steps.qemu.outputs.supported == 'true' && runner.os == 'Linux'
+        if: inputs.run_tests && steps.test_support.outputs.test_mode == 'qemu'
         shell: bash
         run: |
           sudo apt-get update
           sudo apt-get install -y qemu-user qemu-user-static
 
       - name: Install cross sysroot
-        if: inputs.run_tests && steps.qemu.outputs.supported == 'true' && steps.qemu.outputs.sysroot != '' && runner.os == 'Linux'
+        if: inputs.run_tests && steps.test_support.outputs.test_mode == 'qemu' && steps.test_support.outputs.sysroot != ''
         shell: bash
         run: |
           case "${{ inputs.target_cpu }}" in
@@ -303,13 +315,14 @@ jobs:
               ;;
           esac
 
-      - name: Run cross-compiler tests
-        if: inputs.run_tests && steps.qemu.outputs.supported == 'true' && runner.os == 'Linux'
+      - name: Run cross-compiler tests (QEMU)
+        if: inputs.run_tests && steps.test_support.outputs.test_mode == 'qemu'
+        id: qemu_tests
         working-directory: .fpc/src/tests
         shell: bash
         run: |
           echo "=== Running tests for ${{ inputs.target_cpu }}-${{ inputs.target_os }} ==="
-          echo "Emulator: ${{ steps.qemu.outputs.emulator_cmd }}"
+          echo "Emulator: ${{ steps.test_support.outputs.emulator_cmd }}"
 
           # Build the cross compiler path
           CROSS_FPC="${{ steps.vars.outputs.workspace }}/bundle-cross/installed/lib/fpc/${{ inputs.version }}/ppc*"
@@ -325,14 +338,51 @@ jobs:
           make clean
           make digest \
             TEST_FPC="$CROSS_FPC" \
-            TEST_EMULATOR="${{ steps.qemu.outputs.emulator_cmd }}" \
+            TEST_EMULATOR="${{ steps.test_support.outputs.emulator_cmd }}" \
             CPU_TARGET=${{ inputs.target_cpu }} \
             OS_TARGET=${{ inputs.target_os }} \
             TEST_OUTPUTDIR="${{ steps.vars.outputs.workspace }}/test-output" \
             FULL=1 || echo "::warning::Some tests failed"
 
+      - name: Run cross-compiler tests (Native Windows x86_64)
+        if: inputs.run_tests && steps.test_support.outputs.test_mode == 'native' && runner.os == 'Windows'
+        id: native_tests
+        working-directory: .fpc/src/tests
+        shell: bash
+        run: |
+          echo "=== Running native tests for x86_64-win64 ==="
+
+          # Find the cross compiler (ppcrossx64.exe for win64)
+          CROSS_FPC="${{ steps.vars.outputs.workspace }}/bundle-cross/installed/bin/x86_64-win64/ppcrossx64.exe"
+          if [[ ! -f "$CROSS_FPC" ]]; then
+            CROSS_FPC="${{ steps.vars.outputs.workspace }}/bundle-cross/installed/lib/fpc/${{ inputs.version }}/ppcrossx64.exe"
+          fi
+
+          if [[ ! -f "$CROSS_FPC" ]]; then
+            echo "::error::Cross compiler ppcrossx64.exe not found"
+            find "${{ steps.vars.outputs.workspace }}/bundle-cross" -name "ppc*" -type f
+            exit 1
+          fi
+
+          echo "Cross compiler: $CROSS_FPC"
+
+          # Run tests - no emulator needed, runs natively
+          make clean
+          if make digest \
+            TEST_FPC="$CROSS_FPC" \
+            CPU_TARGET=x86_64 \
+            OS_TARGET=win64 \
+            TEST_OUTPUTDIR="${{ steps.vars.outputs.workspace }}/test-output" \
+            FULL=1; then
+            echo "tests_passed=true" >> $GITHUB_OUTPUT
+          else
+            echo "::error::Tests failed for x86_64-win64"
+            echo "tests_passed=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
       - name: Upload test results
-        if: inputs.run_tests && steps.qemu.outputs.supported == 'true'
+        if: inputs.run_tests && steps.test_support.outputs.supported == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: test-results-${{ inputs.target_cpu }}-${{ inputs.target_os }}
@@ -431,10 +481,13 @@ jobs:
           echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Cross Build | ${{ needs.build-cross.result }} |" >> $GITHUB_STEP_SUMMARY
           if [ "${{ inputs.run_tests }}" = "true" ]; then
-            if [ "${{ needs.build-cross.outputs.tests_supported }}" = "true" ]; then
+            TEST_MODE="${{ needs.build-cross.outputs.test_mode }}"
+            if [ "$TEST_MODE" = "native" ]; then
+              echo "| Tests (Native) | ${{ needs.build-cross.result }} |" >> $GITHUB_STEP_SUMMARY
+            elif [ "$TEST_MODE" = "qemu" ]; then
               echo "| Tests (QEMU) | ran |" >> $GITHUB_STEP_SUMMARY
             else
-              echo "| Tests (QEMU) | not supported for target |" >> $GITHUB_STEP_SUMMARY
+              echo "| Tests | not supported for target |" >> $GITHUB_STEP_SUMMARY
             fi
           else
             echo "| Tests | skipped |" >> $GITHUB_STEP_SUMMARY
@@ -445,6 +498,10 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "${{ needs.release.result }}" = "success" ]; then
             echo "**Release:** https://github.com/${{ github.repository }}/releases/tag/v${{ inputs.version }}-latest" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "${{ needs.build-cross.result }}" = "failure" ] && [ "${{ needs.build-cross.outputs.test_mode }}" = "native" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "> **Note:** Release was blocked because native tests failed." >> $GITHUB_STEP_SUMMARY
           fi
 
   update-index:
