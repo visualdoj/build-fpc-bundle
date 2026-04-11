@@ -16,10 +16,6 @@ on:
         description: 'FPC version (e.g., 3.2.3)'
         required: true
         type: string
-      branch:
-        description: 'Git branch to build from'
-        required: true
-        type: string
       bootstrap_fpc:
         description: 'Bootstrap FPC version'
         required: false
@@ -57,9 +53,21 @@ jobs:
       os_short: ${{ steps.vars.outputs.os_short }}
       os_display: ${{ steps.vars.outputs.os_display }}
       fpc_opt: ${{ steps.vars.outputs.fpc_opt }}
+      branch: ${{ steps.version.outputs.branch }}
       cross_matrix: ${{ steps.matrix.outputs.cross_matrix }}
     steps:
       - uses: actions/checkout@v6
+
+      - name: Get branch from versions.json
+        id: version
+        run: |
+          BRANCH=$(jq -r --arg v "${{ inputs.version }}" '.versions[] | select(.name == $v) | .branch' fpc-config/versions.json)
+          if [[ -z "$BRANCH" || "$BRANCH" == "null" ]]; then
+            echo "::error::Version '${{ inputs.version }}' not found in versions.json"
+            exit 1
+          fi
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          echo "Branch for version ${{ inputs.version }}: $BRANCH"
 
       - name: Set host variables
         id: vars
@@ -153,7 +161,7 @@ jobs:
     with:
       os: ${{ inputs.host }}
       version: ${{ inputs.version }}
-      branch: ${{ inputs.branch }}
+      branch: ${{ needs.prepare.outputs.branch }}
       bootstrap_fpc: ${{ inputs.bootstrap_fpc }}
       fpc_opt: ${{ needs.prepare.outputs.fpc_opt }}
     secrets: inherit
@@ -206,7 +214,7 @@ jobs:
           RELEASE_TITLE="FPC ${{ inputs.version }} (latest build)"
           OS_DISPLAY="${{ needs.prepare.outputs.os_display }}"
 
-          RELEASE_NOTES="Automated build of FPC ${{ inputs.version }} from branch ${{ inputs.branch }}
+          RELEASE_NOTES="Automated build of FPC ${{ inputs.version }} from branch ${{ needs.prepare.outputs.branch }}
 
           **Platform:** ${OS_DISPLAY}
           **Build date:** $(date -u +%Y-%m-%d)
