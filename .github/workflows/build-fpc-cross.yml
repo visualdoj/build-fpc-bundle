@@ -160,13 +160,13 @@ jobs:
           #ENDIF
           EOF
 
-      - name: Ensure execute permissions (non-Windows)
-        if: runner.os != 'Windows'
-        working-directory: bundle-cross
-        shell: bash
-        run: |
-          chmod +x installed/bin/* 2>/dev/null || true
-          find installed/lib -type f -name "ppc*" -exec chmod +x {} \; 2>/dev/null || true
+      # - name: Ensure execute permissions (non-Windows)
+      #   if: runner.os != 'Windows'
+      #   working-directory: bundle-cross
+      #   shell: bash
+      #   run: |
+      #     chmod +x installed/bin/* 2>/dev/null || true
+      #     find installed/lib -type f -name "ppc*" -exec chmod +x {} \; 2>/dev/null || true
 
       - name: Create cross archive
         working-directory: bundle-cross

@@ -1,0 +1,409 @@
+name: Build Single Cross
+
+on:
+  workflow_dispatch:
+    inputs:
+      host:
+        description: 'Host platform to build on'
+        required: true
+        type: choice
+        options:
+          - macos-latest
+          - macos-26-intel
+          - windows-latest
+          - ubuntu-latest
+      version:
+        description: 'FPC version (e.g., 3.2.3)'
+        required: true
+        type: string
+      target_cpu:
+        description: 'Target CPU (e.g., aarch64, x86_64, arm, i386)'
+        required: true
+        type: string
+      target_os:
+        description: 'Target OS (e.g., linux, darwin, win64, embedded)'
+        required: true
+        type: string
+      crossopt:
+        description: 'Cross compiler options (CROSSOPT)'
+        required: false
+        default: ''
+        type: string
+      opt:
+        description: 'Compiler options (OPT)'
+        required: false
+        default: ''
+        type: string
+      make_opt:
+        description: 'Additional make options'
+        required: false
+        default: ''
+        type: string
+      run_tests:
+        description: 'Run tests using QEMU (Linux targets only)'
+        required: false
+        default: false
+        type: boolean
+      create_release:
+        description: 'Create/update GitHub release'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  build-cross:
+    name: Cross (${{ inputs.target_cpu }}-${{ inputs.target_os }})
+    runs-on: ${{ inputs.host }}
+    outputs:
+      os_short: ${{ steps.vars.outputs.os_short }}
+      artifact_name: ${{ steps.vars.outputs.artifact_name }}
+      tests_supported: ${{ steps.qemu.outputs.supported }}
+    steps:
+      - name: Set variables
+        id: vars
+        shell: bash
+        run: |
+          OS_NAME="${{ inputs.host }}"
+          case "$OS_NAME" in
+            windows-*)      OS_SHORT="windows" ;;
+            ubuntu-*)       OS_SHORT="linux" ;;
+            macos-26-intel) OS_SHORT="macos" ;;
+            macos-latest)   OS_SHORT="arm64-macos" ;;
+            macos-*)        OS_SHORT="macos" ;;
+            *)              OS_SHORT="$OS_NAME" ;;
+          esac
+          echo "os_short=$OS_SHORT" >> $GITHUB_OUTPUT
+          echo "artifact_name=fpc-${{ inputs.version }}-$OS_SHORT-cross-${{ inputs.target_cpu }}-${{ inputs.target_os }}" >> $GITHUB_OUTPUT
+          WORKSPACE="${{ github.workspace }}"
+          WORKSPACE="${WORKSPACE//\\//}"
+          echo "workspace=$WORKSPACE" >> $GITHUB_OUTPUT
+
+      - name: Check out
+        uses: actions/checkout@v6
+
+      - name: Setup FPC from release
+        uses: visualdoj/setup-fpc@main
+        with:
+          version: ${{ inputs.version }}
+
+      - name: Verify FPC installation
+        shell: bash
+        run: |
+          echo "FPC version:"
+          fpc -iV
+          echo "FPC full info:"
+          fpc -i
+
+      - name: Copy cross tools
+        if: runner.os != 'Windows'
+        shell: bash
+        run: cp -r src/cross/* "$FPC_INSTALLED_DIR/bin/" 2>/dev/null || true
+
+      - name: Create cross bundle directory
+        shell: bash
+        run: |
+          mkdir -p bundle-cross/installed
+          mkdir -p bundle-cross/info
+
+      - name: Setup cross prerequisites
+        uses: ./.github/actions/setup-cross-prerequisites
+        with:
+          target_cpu: ${{ inputs.target_cpu }}
+          target_os: ${{ inputs.target_os }}
+          opt: ${{ inputs.opt }}
+          crossopt: ${{ inputs.crossopt }}
+          make_opt: ${{ inputs.make_opt }}
+
+      - name: Build cross compiler (Windows)
+        if: runner.os == 'Windows'
+        working-directory: .fpc/src
+        shell: bash
+        run: |
+          "$FPC_INSTALLED_DIR/bin/i386-win32/make.exe" \
+            clean all crossinstall \
+            CPU_TARGET=${{ inputs.target_cpu }} \
+            OS_TARGET=${{ inputs.target_os }} \
+            PREFIX="${{ steps.vars.outputs.workspace }}/bundle-cross/installed" \
+            CROSSOPT="${{ inputs.crossopt }}" \
+            OPT="${{ inputs.opt }}" \
+            ${{ inputs.make_opt }}
+
+      - name: Build cross compiler (non-Windows)
+        if: runner.os != 'Windows'
+        working-directory: .fpc/src
+        shell: bash
+        run: |
+          make clean all crossinstall \
+            CPU_TARGET=${{ inputs.target_cpu }} \
+            OS_TARGET=${{ inputs.target_os }} \
+            PREFIX="${{ steps.vars.outputs.workspace }}/bundle-cross/installed" \
+            CROSSOPT="${{ inputs.crossopt }}" \
+            OPT="${{ inputs.opt }}" \
+            ${{ inputs.make_opt }}
+
+      - name: Generate cross info
+        shell: bash
+        run: |
+          echo "${{ inputs.target_cpu }}-${{ inputs.target_os }}" > bundle-cross/info/cross-list.txt
+
+      - name: Generate cross fpc.cfg
+        shell: bash
+        run: |
+          cat > bundle-cross/fpc.cfg << 'EOF'
+          # ${{ inputs.target_cpu }}-${{ inputs.target_os }}
+          #IFDEF cpu${{ inputs.target_cpu }}
+          #IFDEF ${{ inputs.target_os }}
+          #ENDIF
+          #ENDIF
+          EOF
+
+      - name: Create cross archive
+        working-directory: bundle-cross
+        shell: bash
+        run: tar -czvf "../${{ steps.vars.outputs.artifact_name }}.tar.gz" *
+
+      - name: Determine QEMU emulator
+        if: inputs.run_tests
+        id: qemu
+        shell: bash
+        run: |
+          EMULATOR=""
+          SYSROOT=""
+          SUPPORTED="false"
+
+          # Only Linux targets are supported for QEMU user-mode emulation
+          if [[ "${{ inputs.target_os }}" == "linux" ]]; then
+            case "${{ inputs.target_cpu }}" in
+              aarch64)
+                EMULATOR="qemu-aarch64"
+                SYSROOT="/usr/aarch64-linux-gnu"
+                SUPPORTED="true"
+                ;;
+              arm)
+                EMULATOR="qemu-arm"
+                SYSROOT="/usr/arm-linux-gnueabihf"
+                SUPPORTED="true"
+                ;;
+              i386)
+                EMULATOR="qemu-i386"
+                SYSROOT=""
+                SUPPORTED="true"
+                ;;
+              x86_64)
+                EMULATOR="qemu-x86_64"
+                SYSROOT=""
+                SUPPORTED="true"
+                ;;
+              riscv64)
+                EMULATOR="qemu-riscv64"
+                SYSROOT="/usr/riscv64-linux-gnu"
+                SUPPORTED="true"
+                ;;
+              riscv32)
+                EMULATOR="qemu-riscv32"
+                SYSROOT="/usr/riscv32-linux-gnu"
+                SUPPORTED="true"
+                ;;
+              mips)
+                EMULATOR="qemu-mips"
+                SYSROOT="/usr/mips-linux-gnu"
+                SUPPORTED="true"
+                ;;
+              mipsel)
+                EMULATOR="qemu-mipsel"
+                SYSROOT="/usr/mipsel-linux-gnu"
+                SUPPORTED="true"
+                ;;
+              powerpc)
+                EMULATOR="qemu-ppc"
+                SYSROOT="/usr/powerpc-linux-gnu"
+                SUPPORTED="true"
+                ;;
+              powerpc64)
+                EMULATOR="qemu-ppc64"
+                SYSROOT="/usr/powerpc64-linux-gnu"
+                SUPPORTED="true"
+                ;;
+              sparc)
+                EMULATOR="qemu-sparc32plus"
+                SYSROOT="/usr/sparc64-linux-gnu"
+                SUPPORTED="true"
+                ;;
+              sparc64)
+                EMULATOR="qemu-sparc64"
+                SYSROOT="/usr/sparc64-linux-gnu"
+                SUPPORTED="true"
+                ;;
+            esac
+          fi
+
+          echo "emulator=$EMULATOR" >> $GITHUB_OUTPUT
+          echo "sysroot=$SYSROOT" >> $GITHUB_OUTPUT
+          echo "supported=$SUPPORTED" >> $GITHUB_OUTPUT
+
+          if [[ "$SUPPORTED" == "true" ]]; then
+            if [[ -n "$SYSROOT" ]]; then
+              echo "emulator_cmd=$EMULATOR -L $SYSROOT" >> $GITHUB_OUTPUT
+            else
+              echo "emulator_cmd=$EMULATOR" >> $GITHUB_OUTPUT
+            fi
+            echo "Tests will use: $EMULATOR"
+          else
+            echo "emulator_cmd=" >> $GITHUB_OUTPUT
+            echo "::warning::QEMU testing not supported for ${{ inputs.target_cpu }}-${{ inputs.target_os }}"
+          fi
+
+      - name: Setup QEMU
+        if: inputs.run_tests && steps.qemu.outputs.supported == 'true' && runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user qemu-user-static
+
+      - name: Install cross sysroot
+        if: inputs.run_tests && steps.qemu.outputs.supported == 'true' && steps.qemu.outputs.sysroot != '' && runner.os == 'Linux'
+        shell: bash
+        run: |
+          case "${{ inputs.target_cpu }}" in
+            aarch64)
+              sudo apt-get install -y gcc-aarch64-linux-gnu
+              ;;
+            arm)
+              sudo apt-get install -y gcc-arm-linux-gnueabihf
+              ;;
+            riscv64)
+              sudo apt-get install -y gcc-riscv64-linux-gnu
+              ;;
+            mips)
+              sudo apt-get install -y gcc-mips-linux-gnu
+              ;;
+            mipsel)
+              sudo apt-get install -y gcc-mipsel-linux-gnu
+              ;;
+            powerpc)
+              sudo apt-get install -y gcc-powerpc-linux-gnu
+              ;;
+            powerpc64)
+              sudo apt-get install -y gcc-powerpc64-linux-gnu
+              ;;
+            sparc64)
+              sudo apt-get install -y gcc-sparc64-linux-gnu
+              ;;
+          esac
+
+      - name: Run cross-compiler tests
+        if: inputs.run_tests && steps.qemu.outputs.supported == 'true' && runner.os == 'Linux'
+        working-directory: .fpc/src/tests
+        shell: bash
+        run: |
+          echo "=== Running tests for ${{ inputs.target_cpu }}-${{ inputs.target_os }} ==="
+          echo "Emulator: ${{ steps.qemu.outputs.emulator_cmd }}"
+
+          # Build the cross compiler path
+          CROSS_FPC="${{ steps.vars.outputs.workspace }}/bundle-cross/installed/lib/fpc/${{ inputs.version }}/ppc*"
+          CROSS_FPC=$(ls $CROSS_FPC 2>/dev/null | head -1)
+
+          if [[ -z "$CROSS_FPC" ]]; then
+            echo "::error::Cross compiler not found"
+            exit 1
+          fi
+
+          echo "Cross compiler: $CROSS_FPC"
+
+          make clean
+          make digest \
+            TEST_FPC="$CROSS_FPC" \
+            TEST_EMULATOR="${{ steps.qemu.outputs.emulator_cmd }}" \
+            CPU_TARGET=${{ inputs.target_cpu }} \
+            OS_TARGET=${{ inputs.target_os }} \
+            TEST_OUTPUTDIR="${{ steps.vars.outputs.workspace }}/test-output" \
+            FULL=1 || echo "::warning::Some tests failed"
+
+      - name: Upload test results
+        if: inputs.run_tests && steps.qemu.outputs.supported == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-${{ inputs.target_cpu }}-${{ inputs.target_os }}
+          path: ${{ github.workspace }}/test-output/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload cross artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.vars.outputs.artifact_name }}
+          path: ${{ steps.vars.outputs.workspace }}/${{ steps.vars.outputs.artifact_name }}.tar.gz
+          retention-days: 7
+
+  release:
+    needs: build-cross
+    if: inputs.create_release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ needs.build-cross.outputs.artifact_name }}
+          path: artifacts
+
+      - name: List artifacts
+        run: |
+          echo "Artifacts to release:"
+          find artifacts -name "*.tar.gz" 2>/dev/null || echo "No artifacts found"
+
+      - name: Create/Update Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_TAG="v${{ inputs.version }}-latest"
+          RELEASE_TITLE="FPC ${{ inputs.version }} (latest build)"
+
+          # Check if release exists
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG exists, uploading artifacts..."
+          else
+            echo "Creating new release $RELEASE_TAG..."
+            gh release create "$RELEASE_TAG" \
+              --title "$RELEASE_TITLE" \
+              --notes "Automated build of FPC ${{ inputs.version }}" \
+              --prerelease
+          fi
+
+          # Upload all artifacts (overwrite if exists)
+          find artifacts -name "*.tar.gz" -exec gh release upload "$RELEASE_TAG" {} --clobber \; 2>/dev/null || true
+
+          echo "Release URL: https://github.com/${{ github.repository }}/releases/tag/$RELEASE_TAG"
+
+  summary:
+    needs: [build-cross, release]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Summary
+        run: |
+          echo "# FPC ${{ inputs.version }} Cross Compiler" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Host:** ${{ inputs.host }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Target:** ${{ inputs.target_cpu }}-${{ inputs.target_os }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Step | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Cross Build | ${{ needs.build-cross.result }} |" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ inputs.run_tests }}" = "true" ]; then
+            if [ "${{ needs.build-cross.outputs.tests_supported }}" = "true" ]; then
+              echo "| Tests (QEMU) | ran |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| Tests (QEMU) | not supported for target |" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "| Tests | skipped |" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "| Release | ${{ needs.release.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Bundle name:** \`${{ needs.build-cross.outputs.artifact_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.release.result }}" = "success" ]; then
+            echo "**Release:** https://github.com/${{ github.repository }}/releases/tag/v${{ inputs.version }}-latest" >> $GITHUB_STEP_SUMMARY
+          fi

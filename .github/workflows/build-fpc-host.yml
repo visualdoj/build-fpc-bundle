@@ -147,13 +147,13 @@ jobs:
           echo "${{ inputs.branch }}" > info/branch.txt
           date -u +%Y-%m-%dT%H:%M:%SZ > info/build-date.txt
 
-      - name: Ensure execute permissions (non-Windows)
-        if: runner.os != 'Windows'
-        working-directory: bundle
-        shell: bash
-        run: |
-          chmod +x installed/bin/* 2>/dev/null || true
-          find installed/lib -type f -name "ppc*" -exec chmod +x {} \; 2>/dev/null || true
+      # - name: Ensure execute permissions (non-Windows)
+      #   if: runner.os != 'Windows'
+      #   working-directory: bundle
+      #   shell: bash
+      #   run: |
+      #     chmod +x installed/bin/* 2>/dev/null || true
+      #     find installed/lib -type f -name "ppc*" -exec chmod +x {} \; 2>/dev/null || true
 
       - name: Create archive
         working-directory: bundle
