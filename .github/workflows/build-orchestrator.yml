@@ -112,8 +112,8 @@ jobs:
     secrets: inherit
 
   build-cross-windows:
-    needs: test-windows
-    if: inputs.tier != 'none' && needs.prepare.outputs.cross_matrix_windows != '[]'
+    needs: [prepare, test-windows]
+    if: always() && needs.test-windows.result != 'failure' && inputs.tier != 'none' && needs.prepare.outputs.cross_matrix_windows != '[]'
     uses: ./.github/workflows/build-fpc-cross.yml
     with:
       os: windows-latest
@@ -123,7 +123,7 @@ jobs:
     secrets: inherit
 
   gate-windows:
-    needs: build-cross-windows
+    needs: [build-host-windows, test-windows, build-cross-windows]
     if: always()
     runs-on: ubuntu-latest
     outputs:
@@ -166,8 +166,8 @@ jobs:
     secrets: inherit
 
   build-cross-linux:
-    needs: test-linux
-    if: inputs.tier != 'none' && needs.prepare.outputs.cross_matrix_linux != '[]'
+    needs: [prepare, test-linux]
+    if: always() && needs.test-linux.result != 'failure' && inputs.tier != 'none' && needs.prepare.outputs.cross_matrix_linux != '[]'
     uses: ./.github/workflows/build-fpc-cross.yml
     with:
       os: ubuntu-latest
@@ -177,7 +177,7 @@ jobs:
     secrets: inherit
 
   gate-linux:
-    needs: build-cross-linux
+    needs: [build-host-linux, test-linux, build-cross-linux]
     if: always()
     runs-on: ubuntu-latest
     outputs:
@@ -219,8 +219,8 @@ jobs:
     secrets: inherit
 
   build-cross-macos:
-    needs: test-macos
-    if: inputs.tier != 'none' && needs.prepare.outputs.cross_matrix_macos != '[]'
+    needs: [prepare, test-macos]
+    if: always() && needs.test-macos.result != 'failure' && inputs.tier != 'none' && needs.prepare.outputs.cross_matrix_macos != '[]'
     uses: ./.github/workflows/build-fpc-cross.yml
     with:
       os: macos-26-intel
@@ -230,7 +230,7 @@ jobs:
     secrets: inherit
 
   gate-macos:
-    needs: build-cross-macos
+    needs: [build-host-macos, test-macos, build-cross-macos]
     if: always()
     runs-on: ubuntu-latest
     outputs:
@@ -272,8 +272,8 @@ jobs:
     secrets: inherit
 
   build-cross-macos-arm64:
-    needs: test-macos-arm64
-    if: inputs.tier != 'none' && needs.prepare.outputs.cross_matrix_macos_arm64 != '[]'
+    needs: [prepare, test-macos-arm64]
+    if: always() && needs.test-macos-arm64.result != 'failure' && inputs.tier != 'none' && needs.prepare.outputs.cross_matrix_macos_arm64 != '[]'
     uses: ./.github/workflows/build-fpc-cross.yml
     with:
       os: macos-latest
@@ -283,7 +283,7 @@ jobs:
     secrets: inherit
 
   gate-macos-arm64:
-    needs: build-cross-macos-arm64
+    needs: [build-host-macos-arm64, test-macos-arm64, build-cross-macos-arm64]
     if: always()
     runs-on: ubuntu-latest
     outputs:
