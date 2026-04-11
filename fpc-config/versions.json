@@ -7,7 +7,7 @@
       "priority": 1,
       "status": "development",
       "run_tests": true,
-      "enabled": false
+      "enabled": true
     },
     {
       "name": "3.2.4",
@@ -16,7 +16,7 @@
       "priority": 2,
       "status": "stable",
       "run_tests": true,
-      "enabled": false
+      "enabled": true
     },
     {
       "name": "3.2.3",
@@ -25,7 +25,7 @@
       "priority": 3,
       "status": "stable",
       "run_tests": true,
-      "enabled": false
+      "enabled": true
     },
     {
       "name": "3.2.2",
@@ -45,7 +45,7 @@
       "priority": 5,
       "status": "stable",
       "run_tests": true,
-      "enabled": true
+      "enabled": false
     },
     {
       "name": "3.0.4",
